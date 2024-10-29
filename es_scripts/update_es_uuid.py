@@ -70,6 +70,18 @@ def delete_es_entry(id):
     index = 'perfscale-jenkins-metadata'
     es.delete(index=index, doc_type='_doc', id=id)
 
+def delete_key(id, index, key_to_delete):
+
+    es = Elasticsearch(
+        [f'https://{ES_USERNAME}:{ES_PASSWORD}@{ES_URL}:443']
+    )
+
+    es.update(
+        index=index,
+        id=id,
+        body={"script": f"ctx._source.remove('{key_to_delete}')"}
+    )
+
 def update_data_to_elasticsearch(id, data_to_update, index = 'perfscale-jenkins-metadata'):
     ''' updates captured data in RESULTS dictionary to Elasticsearch
     '''
@@ -82,7 +94,7 @@ def update_data_to_elasticsearch(id, data_to_update, index = 'perfscale-jenkins-
     start = time.time()
     
     doc = es.get(index=index, doc_type='_doc', id=id)
-    ##print('doc '+ str(doc))
+    #print('doc '+ str(doc))
     for k,v in data_to_update.items(): 
         doc['_source'][k] = v
     es.update(index=index, doc_type='_doc', id=id, body={"doc": doc['_source']
