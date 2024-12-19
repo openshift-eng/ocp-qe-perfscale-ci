@@ -40,6 +40,11 @@ pipeline {
           defaultValue: "", 
           description: 'Set a baseline uuid to use for comparison, if blank will find baseline uuid for profile, workload and worker node count to then compare'
         )
+        string(
+          name: "VERSION", 
+          defaultValue: "", 
+          description: 'OCP version of the UUID'
+        )
         booleanParam(
           name: "PREVIOUS_VERSION", 
           defaultValue: false,
@@ -142,6 +147,7 @@ pipeline {
                     echo "$ENV_VARS" > .env_override
                     # Export those env vars so they could be used by CI Job
                     set -a && source .env_override && set +a
+                    export version=$VERSION
                     if [[ $INTERNAL_ES == "true" ]]; then
                       n=${#ES_PASSWORD_INTERNAL}
                       export ES_SERVER="https://$ES_USERNAME_INTERNAL:$ES_PASSWORD_INTERNAL@opensearch.app.intlab.redhat.com"
@@ -181,7 +187,6 @@ pipeline {
                     if [[ -n $BASELINE_UUID ]]; then
                       extra_vars+=" --baseline $BASELINE_UUID"
                     fi
-                    
                     
                     orion cmd --config $CONFIG --debug$extra_vars
                     pwd
