@@ -61,13 +61,12 @@ def es_search(params, wildcard="", should="",must_not="", index='perfscale-jenki
         return search_result['hits']['hits']
     return hits
 
-def delete_es_entry(id):
+def delete_es_entry(id, index = 'perfscale-jenkins-metadata'):
     # create Elasticsearch object and attempt index
     es = Elasticsearch(
         [f'https://{ES_USERNAME}:{ES_PASSWORD}@{ES_URL}:443']
     )
-
-    index = 'perfscale-jenkins-metadata'
+    
     es.delete(index=index, doc_type='_doc', id=id)
 
 def delete_key(id, index, key_to_delete):
