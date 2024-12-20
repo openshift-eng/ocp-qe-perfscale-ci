@@ -136,6 +136,19 @@ pipeline {
             ],
             userRemoteConfigs: [[url: params.ORION_REPO ]]
         ])
+        checkout([
+            $class: 'GitSCM',
+            branches: [[name: "main" ]],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [
+                [$class: 'CloneOption', noTags: true, reference: '', shallow: true],
+                [$class: 'PruneStaleBranch'],
+                [$class: 'CleanCheckout'],
+                [$class: 'IgnoreNotifyCommit'],
+                [$class: 'RelativeTargetDirectory', relativeTargetDir: 'helpful_scripts']
+            ],
+            userRemoteConfigs: [[url: "https://github.com/paigerube14/ocp-qe-perfscale-ci.git" ]]
+        ])
         
         script{
             env.EMAIL_ID_FOR_RESULTS_SHEET = "${userId}@redhat.com"
@@ -168,6 +181,9 @@ pipeline {
                     source venv3/bin/activate
                     python --version
 
+                    pip install -r helpful_scripts/es_scripts/requirements.txt
+                    python helpful_scripts/get_graphana_link.py
+
                     cd orion
                     pip install -r requirements.txt
                     pip install .
@@ -189,6 +205,7 @@ pipeline {
                     fi
                     
                     orion cmd --config $CONFIG --debug$extra_vars
+
                     pwd
 
                   ''')
