@@ -61,17 +61,17 @@ def get_graphana():
     worker_count = f"&var-workerNodesCount={workload_details['workerNodesCount']}"
     # data source for public dev es 
     # might want to be able to loop through multiple baseline uuids if more than one is passed
-
+    major_version = "&var-ocpMajorVersion=" + str(workload_details['releaseStream'][:4])
+    for baseline_details in baseline_workload_details:
+        if baseline_details['releaseStream'][:4] not in major_version:
+            major_version += "&var-ocpMajorVersion=" + str(baseline_details['releaseStream'][:4])
     grafana_url_ending=f"{worker_count}&from=now-1y&to=now&var-platform=AWS&var-platform=Azure&var-platform=GCP&var-platform=IBMCloud&var-platform=AlibabaCloud&var-platform=VSphere&var-platform=rosa&var-clusterType=rosa&var-clusterType=self-managed"
     if workload == "ingress-perf":
         if "intlab" in os.environ.get("ES_URL"): 
             data_source = "be0f4aff-4122-43cf-95dd-fd51c012a208"
         else: 
             data_source = "beefdfd9-800e-430c-afef-383032aa2d1f"
-        major_version = "&var-ocpMajorVersion=" + str(workload_details['releaseStream'][:4])
-        for baseline_details in baseline_workload_details:
-            if baseline_details['releaseStream'][:4] not in major_version:
-                major_version += "&var-ocpMajorVersion=" + str(baseline_details['releaseStream'][:4])
+        
         grafana_url_ending += f"&var-infraNodesType={workload_details['infraNodesType']}"
         print(f"grafana url https://grafana.rdu2.scalelab.redhat.com:3000/d/d6105ff8-bc26-4d64-951e-56da771b703d/ingress-perf?orgId=1&var-datasource=beefdfd9-800e-430c-afef-383032aa2d1f&var-Datasource={data_source}{uuid_str}=&var-termination=edge&var-termination=http&var-termination=passthrough&var-termination=reencrypt&var-latency_metric=avg_lat_us&var-compare_by=uuid.keyword{major_version}{grafana_url_ending}")
         print(f"grafana report mode link:  https://grafana.rdu2.scalelab.redhat.com:3000/d/df906760-b4c0-44cc-9ecb-586cf39f9bab/ingress-perf-v2-report-mode?orgId=1&var-datasource={data_source}{uuid_str}&var-ocpMajorVersion=All&var-uuid=&var-termination=All&var-latency_metric=avg_lat_us&var-compare_by=ocpMajorVersion.keyword&var-all_uuids=All{grafana_url_ending}")
@@ -84,12 +84,12 @@ def get_graphana():
         print(f"grafana url  https://grafana.rdu2.scalelab.redhat.com:3000/d/wINGhybVz/k8s-netperf?orgId=1&var-datasource={data_source}{uuid_str}&var-termination=edge&var-termination=http&var-termination=passthrough&var-termination=reencrypt&var-latency_metric=avg_lat_us&var-compare_by=uuid.keyword&var-workerNodesCount=9&from=now-1y&to=now&var-platform=All&var-clusterType=rosa&var-clusterType=self-managed&var-workerNodesType=All&var-hostNetwork=All&var-service=All&var-parallelism=All&var-throughput_profile=All&var-latency_profile=All&var-messageSize=All&var-driver=netperf")
     else:
         if "intlab" in os.environ.get("ES_URL"):
-            data_source = "C3f6SSfnk"
+            data_source = "ab3f14e6-a50f-4d52-93fa-a5076794f864"
         else: 
-            data_source = "QE%20kube-burner"
+            data_source = "QzcDu7T4z"
         print( f"grafana url https://grafana.rdu2.scalelab.redhat.com:3000/d/g4dJlkBnz3/kube-burner-compare?orgId=1&var-Datasource={data_source}&var-sdn=OVNKubernetes&var-workload={workload}&var-latencyPercentile=P99&var-condition=Ready&var-component=kube-apiserver{uuid_str}{grafana_url_ending}")
 
-        print(f"grafana report mode link: https://grafana.rdu2.scalelab.redhat.com:3000/d/D5E8c5XVz/kube-burner-report-mode?orgId=1&var-Datasource={data_source}&var-sdn=OVNKubernetes&var-clusterType=rosa&var-clusterType=self-managed&var-job={workload}&var-compare_by=metadata.ocpMajorVersion&var-component=kube-apiserver&var-component=kube-controller-manager&var-node_roles=masters&var-node_roles=workers&var-node_roles=infra&to=now{uuid_str}{grafana_url_ending}")
+        print(f"grafana report mode link: https://grafana.rdu2.scalelab.redhat.com:3000/d/D5E8c5XVz/kube-burner-report-mode?orgId=1&var-Datasource={data_source}&var-sdn=OVNKubernetes&var-clusterType=rosa&var-clusterType=self-managed&var-job={workload}{major_version}&var-compare_by=metadata.ocpMajorVersion&var-component=kube-apiserver&var-component=kube-controller-manager&var-node_roles=masters&var-node_roles=workers&var-node_roles=infra&to=now{uuid_str}{grafana_url_ending}")
 
     # 
 get_graphana()
