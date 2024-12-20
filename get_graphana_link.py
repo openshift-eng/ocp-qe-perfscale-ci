@@ -12,9 +12,9 @@ def find_workload_type( current_run_uuid):
     index = "perf_scale_ci*"
     
     hits = update_es_uuid.es_search(search_params, index=index)
-    print('hits ' + str(hits))
+    #print('hits ' + str(hits))
     if len(hits) <= 0:
-        print('else')
+        #print('else')
         workload_type = find_workload_type_sub(current_run_uuid)
         if workload_type == "Unknown": 
             
@@ -25,7 +25,7 @@ def find_workload_type( current_run_uuid):
 
             ES_URL = os.environ["ES_URL"] = "opensearch.app.intlab.redhat.com"
             hits = update_es_uuid.es_search_url(search_params, es_url=ES_URL, es_pass=os.getenv("ES_PASSWORD_INTERNAL"), es_user=os.getenv("ES_USERNAME_INTERNAL"),index=es_metadata_index)
-            print('hits ' + str(hits))
+            #print('hits ' + str(hits))
     return hits[0]['_source']
     
 

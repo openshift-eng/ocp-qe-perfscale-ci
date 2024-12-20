@@ -25,12 +25,9 @@ def es_search(params, wildcard="", should="",must_not="", index='perfscale-jenki
     global ES_URL
     if "http" in ES_URL: 
         ES_URL = ES_URL.split('//')[1]
-    print(' es url ' + str(ES_URL))
-    print("ES_PASS " + str(ES_PASSWORD) + str(ES_USERNAME))
     es = Elasticsearch(
         [f'https://{ES_USERNAME}:{ES_PASSWORD}@{ES_URL}'], verify_certs=False, use_ssl=True
     )
-    print('set es fine')
     filter_data = []
     filter_data.append({
           "match_all": {}
@@ -73,7 +70,6 @@ def es_search(params, wildcard="", should="",must_not="", index='perfscale-jenki
     #print("f ilter_data " + str(filter_data))
     try: 
         search_result = es.search(index=index, body={"query": {"bool": {"filter": filter_data}},  "size": size, "from": from_pos})
-        print('serach resu.t' + str(search_result))
     except Exception as e: 
         print('exception ' +str(e))
     hits = []
