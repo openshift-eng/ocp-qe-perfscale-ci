@@ -9,10 +9,10 @@ def find_workload_type( current_run_uuid):
         "uuid": current_run_uuid
     }
 
-    index = "perf_scale_ci*"
+    index = os.getenv("es_metadata_index")
     
     hits = update_es_uuid.es_search(search_params, index=index)
-    #print('hits ' + str(hits))
+    print('hits ' + str(hits))
     if len(hits) <= 0:
         #print('else')
         workload_type = find_workload_type_sub(current_run_uuid)
@@ -24,7 +24,7 @@ def find_workload_type( current_run_uuid):
             os.environ["ES_PASSWORD"] =  os.getenv("ES_PASSWORD_INTERNAL")
             # try finding in internal es
 
-            ES_URL = os.environ["ES_URL"] = "opensearch.app.intlab.redhat.com"
+            ES_URL = os.environ["ES_URL"] = "https://opensearch.app.intlab.redhat.com"
             hits = update_es_uuid.es_search_url(search_params, es_url=ES_URL, es_pass=os.getenv("ES_PASSWORD_INTERNAL"), es_user=os.getenv("ES_USERNAME_INTERNAL"),index=es_metadata_index)
             #print('hits ' + str(hits))
     return hits[0]['_source']
@@ -42,7 +42,7 @@ def find_workload_type_sub( current_run_uuid):
         workload_index_map = { "kube-burner":"ripsaw-kube-burner*" ,"ingress-perf":"ingress-perf*", "network-perf-v2":"k8s-netperf*","router-perf":"router-test-results"}
     for k, v in workload_index_map.items(): 
         hits = update_es_uuid.es_search(search_params, index=v)
-        #print('hits extra' + str(hits))
+        print('hits extra' + str(hits))
         if len(hits) > 0:
             return k
     return "Unknown"
