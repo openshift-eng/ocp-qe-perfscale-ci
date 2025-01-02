@@ -34,7 +34,11 @@ def find_workload_type_sub( current_run_uuid):
         "uuid": current_run_uuid
     }
 
-    workload_index_map = { "kube-burner":"ripsaw-kube-burner*" ,"ingress-perf":"ingress-perf*", "network-perf-v2":"k8s-netperf","router-perf":"router-test-results"}
+
+    if "intlab" in os.environ.get("ES_URL"): 
+        workload_index_map = { "kube-burner":"ospst-ripsaw-kube-burner*" ,"ingress-perf":"ospst-ingress-perf*", "network-perf-v2":"ospst-k8s-netperf*"}
+    else: 
+        workload_index_map = { "kube-burner":"ripsaw-kube-burner*" ,"ingress-perf":"ingress-perf*", "network-perf-v2":"k8s-netperf*","router-perf":"router-test-results"}
     for k, v in workload_index_map.items(): 
         hits = update_es_uuid.es_search(search_params, index=v)
         #print('hits extra' + str(hits))
