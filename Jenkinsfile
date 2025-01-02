@@ -175,6 +175,7 @@ pipeline {
                       export es_benchmark_index="ripsaw-kube-burner*"
                       export ES_SERVER="https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
                     fi 
+                    export ES_URL=$ES_SERVER
                     python3.9 --version
                     python3.9 -m pip install virtualenv
                     python3.9 -m virtualenv venv3
