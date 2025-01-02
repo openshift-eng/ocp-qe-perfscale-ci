@@ -16,7 +16,8 @@ def find_workload_type( current_run_uuid):
     if len(hits) <= 0:
         #print('else')
         workload_type = find_workload_type_sub(current_run_uuid)
-        if workload_type == "Unknown": 
+        print('workload type' + str(workload_type))
+        if workload_type == "Unknown" and "intlab" not in os.environ.get("ES_URL"): 
             
             es_metadata_index="ospst-perf-scale-ci*"
             os.environ["ES_USERNAME"] = os.getenv("ES_USERNAME_INTERNAL")
