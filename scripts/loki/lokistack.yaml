@@ -1,0 +1,36 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: lokistack-template
+objects:
+  - apiVersion: loki.grafana.com/v1
+    kind: LokiStack
+    metadata:
+      name: lokistack
+      namespace: netobserv
+    spec:
+      limits:
+        global:
+          ingestion:
+            ingestionBurstSize: 100
+            ingestionRate: 500
+            maxGlobalStreamsPerTenant: 100000
+            perStreamRateLimit: 9
+            perStreamRateLimitBurst: 45
+      tenants:
+        mode: openshift-network
+      managementState: Managed
+      storage:
+        schemas:
+          - effectiveDate: '2023-10-15'
+            version: v13
+        secret:
+          name: s3-secret
+          type: s3
+      size: ${SIZE}
+      storageClassName: ${DEFAULT_SC}
+parameters:
+  - name: SIZE
+    value: "1x.extra-small"
+  - name: DEFAULT_SC
+    value: "gp3-csi"
