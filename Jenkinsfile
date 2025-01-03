@@ -164,18 +164,23 @@ pipeline {
                     if [[ $INTERNAL_ES == "true" ]]; then
                       n=${#ES_PASSWORD_INTERNAL}
                       export ES_SERVER="https://$ES_USERNAME_INTERNAL:$ES_PASSWORD_INTERNAL@opensearch.app.intlab.redhat.com"
+                      export ES_URL="https://opensearch.app.intlab.redhat.com"
+                      export ES_PASSWORD=$ES_PASSWORD_INTERNAL
+                      export ES_USERNAME=$ES_USERNAME_INTERNAL
                       n=${#ES_SERVER}
                       echo "internal $n"
                       export es_metadata_index="ospst-perf-scale-ci*"
                       export es_benchmark_index="ospst-ripsaw-kube-burner*"
+
 
                     else
                       echo "qe"
                       export es_metadata_index="perf_scale_ci*"
                       export es_benchmark_index="ripsaw-kube-burner*"
                       export ES_SERVER="https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
+                      export ES_URL="https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
                     fi 
-                    export ES_URL=$ES_SERVER
+
                     python3.9 --version
                     python3.9 -m pip install virtualenv
                     python3.9 -m virtualenv venv3
