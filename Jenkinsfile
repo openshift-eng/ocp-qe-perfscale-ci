@@ -12,9 +12,15 @@ if (userId) {
 
 pipeline {
     environment {
-        def NOO_BUNDLE_VERSION = ''
+        // environment variable declared here will retain its values  
+        // through all stages when accessesed as ${env.VAR} 
+        // If the env var values are updated during the stages it should be accessed as ${VAR}
+        NOO_BUNDLE_VERSION = null
         def BENCHMARK_CSV_LOG = "$WORKSPACE/e2e-benchmarking/benchmark_csv.log"
         def BENCHMARK_COMP_LOG = "$WORKSPACE/e2e-benchmarking/benchmark_comp.log"
+        def templateParams = ''
+        def ingressWorkloadJob = ''
+        def kubeburnerWorkloadJob = ''
     }
 
     // job runs on specified agent
@@ -24,6 +30,7 @@ pipeline {
     options {
         timeout(time: 6, unit: 'HOURS')
         ansiColor('xterm')
+        parallelsAlwaysFailFast()
     }
 
     // job parameters
@@ -61,8 +68,8 @@ pipeline {
         )
         booleanParam(
             name: 'INFRA_WORKLOAD_INSTALL',
-            defaultValue: false,
-            description: 'Install workload and infrastructure nodes even if less than 50 nodes'
+            defaultValue: true,
+            description: 'Install workload and infrastructure nodes; required for ingress-perf. Uncheck if you already have infra nodes in your cluster'
         )
         booleanParam(
             name: 'INSTALL_DITTYBOPPER',
@@ -165,20 +172,6 @@ pipeline {
                 e.g. <b>e2bdef6</b>
             '''
         )
-        string(
-            name: 'PLUGIN_PREMERGE_OVERRIDE',
-            defaultValue: '',
-            description: '''
-                You can specify here a specific ConsolePlugin premerge image rather than using the operator defined image<br/>
-                These SHA hashes can be found in ConsolePlugin PR's after adding the label '/ok-to-test'<br/>
-                e.g. <b>e2bdef6</b>
-            '''
-        )
-        string(
-            name: 'CONTROLLER_MEMORY_LIMIT',
-            defaultValue: '',
-            description: 'Note that 800Mi = 800 mebibytes, i.e. 0.8 Gi'
-        )
         separator(
             name: 'FLOWCOLLECTOR_CONFIG_OPTIONS',
             sectionHeader: 'Flowcollector Configuration Options',
@@ -198,20 +191,10 @@ pipeline {
             defaultValue: '100000',
             description: 'eBPF max flows that can be cached before evicting'
         )
-        string(
-            name: 'EBPF_MEMORY_LIMIT',
-            defaultValue: '',
-            description: 'Note that 800Mi = 800 mebibytes, i.e. 0.8 Gi'
-        )
         booleanParam(
             name: 'EBPF_PRIVILEGED',
-            defaultValue: false,
-            description: 'Check this box to run ebpf-agent in privileged mode'
-        )
-        string(
-            name: 'FLP_MEMORY_LIMIT',
-            defaultValue: '',
-            description: 'Note that 800Mi = 800 mebibytes, i.e. 0.8 Gi'
+            defaultValue: true,
+            description: 'Uncheck this box to run ebpf-agent in unprivileged mode'
         )
         booleanParam(
             name: 'ENABLE_KAFKA',
@@ -230,9 +213,9 @@ pipeline {
             defaultValue: '',
             description: '''
                 Replicas should be at least half the number of Kafka TOPIC_PARTITIONS and should not exceed number of TOPIC_PARTITIONS or number of nodes:<br/>
-                <b>Leave this empty if you're triggering standard perf-workloads, default of 6, 12 and 18 FLP_KAFKA_REPLICAS will be used for node-density-heavy, ingress-perf and cluster-density-v2 workloads respectively</b><br/>
+                <b>Leave this empty if you're triggering standard perf-workloads, default of 6 and 18 FLP_KAFKA_REPLICAS will be used for node-density-heavy and cluster-density-v2 workloads respectively</b><br/>
                 3 - for non-perf testing environments<br/>
-                <b>Use this field to overwrite default FLP_KAFKA_REPLICAS</b><br/>
+                <b>Use this field to overwrite default FLP_KAFKA_REPLICAS, for e.g. when triggering for ingress-perf workload</b><br/>
             '''
         )
         separator(
@@ -250,10 +233,15 @@ pipeline {
             description: '''
                 Workload to run on Netobserv-enabled cluster<br/>
                 "cluster-density-v2" and "node-density-heavy" options will trigger "kube-burner-ocp" job<br/>
-                "ingress-perf" will trigger "ingress-perf" job<br/>
+                "ingress-perf" will always run with node-density-heavy and cluster-density-v2 workloads. If only ingress-perf workload needs to be run, select that option.<br/>
                 "None" will run no workload<br/>
                 For additional guidance on configuring workloads, see <a href=https://docs.google.com/spreadsheets/d/1DdFiJkCMA4c35WQT2SWXbdiHeCCcAZYjnv6wNpsEhIA/edit?usp=sharing#gid=1506806462>here</a>
             '''
+        )
+        booleanParam(
+            name: 'RUN_INGRESS_PERF_IN_PARALLEL',
+            defaultValue: true,
+            description: 'Uncheck this box if you want to disable running ingress-perf workload in parallel to node-density-heavy or cluster-density-v2 workload'
         )
         string(
             name: 'VARIABLE',
@@ -575,16 +563,6 @@ pipeline {
                             error("Network Observability FLP image patch ${params.FLP_PREMERGE_OVERRIDE} failed :(")
                         }
                     }
-                    if (params.PLUGIN_PREMERGE_OVERRIDE != '') {
-                        env.PLUGIN_PREMERGE_IMAGE = "quay.io/netobserv/network-observability-console-plugin:${PLUGIN_PREMERGE_OVERRIDE}"
-                        netobservPluginPatchReturnCode = sh(returnStatus: true, script: """
-                            source $WORKSPACE/ocp-qe-perfscale-ci/scripts/netobserv.sh
-                            patch_netobserv "plugin" $PLUGIN_PREMERGE_IMAGE
-                        """)
-                        if (netobservPluginPatchReturnCode.toInteger() != 0) {
-                            error("Network Observability Plugin image patch ${params.PLUGIN_PREMERGE_OVERRIDE} failed :(")
-                        }
-                    }
                     // if installation and patching succeeds, continue and display controller, FLP, and eBPF pods running in cluster
                     else {
                         println("Successfully installed Network Observability from ${params.INSTALLATION_SOURCE} :)")
@@ -597,6 +575,7 @@ pipeline {
         }
         stage('Capture NetObserv Operator Bundle version'){
             when {
+                beforeAgent true
                 expression { params.INSTALLATION_SOURCE == "Official" || params.INSTALLATION_SOURCE == "Internal" }
             }
             agent { 
@@ -605,42 +584,41 @@ pipeline {
                 label "upshift_docker"
             }
             steps {
+                // checkout ocp-qe-perfscale-ci repo
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: GIT_BRANCH ]],
+                    userRemoteConfigs: [[url: GIT_URL ]],
+                    extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ocp-qe-perfscale-ci']]
+                ])
+                // copy artifacts from Flexy install
+                copyArtifacts(
+                    fingerprintArtifacts: true,
+                    projectName: 'ocp-common/Flexy-install',
+                    selector: specific(params.FLEXY_BUILD_NUMBER),
+                    target: 'flexy-artifacts'
+                )
+                withCredentials(
+                    [usernamePassword(credentialsId: 'c1802784-0f74-4b35-99fb-32dfa9a207ad', usernameVariable: 'QUAY_USER', passwordVariable: 'QUAY_PASSWORD')]){
+                    sh 'podman login -u $QUAY_USER -p $QUAY_PASSWORD quay.io'
+                }
+                withCredentials([usernamePassword(credentialsId: 'db799772-7708-4ed0-bfe7-0fddfc8088eb', usernameVariable: 'REG_REDHAT_USER', passwordVariable: 'REG_REDHAT_PASSWORD')]){
+                    sh 'podman login -u $REG_REDHAT_USER -p ${REG_REDHAT_PASSWORD} registry.redhat.io'
+                }
+                withCredentials([usernamePassword(credentialsId: 'brew-registry-osbs-mirror', usernameVariable: 'BREW_USER', passwordVariable: 'BREW_PASSWORD')]){ 
+                    sh 'podman login -u $BREW_USER -p $BREW_PASSWORD brew.registry.redhat.io'
+                }
+                withCredentials([usernamePassword(credentialsId: '41c2dd39-aad7-4f07-afec-efc052b450f5', usernameVariable: 'REG_STAGE_USER', passwordVariable: 'REG_STAGE_PASSWORD')]){
+                    sh 'podman login -u $REG_STAGE_USER -p $REG_STAGE_PASSWORD registry.stage.redhat.io'
+                }
                 script {
-                    // copy artifacts from Flexy install
-                    copyArtifacts(
-                        fingerprintArtifacts: true,
-                        projectName: 'ocp-common/Flexy-install',
-                        selector: specific(params.FLEXY_BUILD_NUMBER),
-                        target: 'flexy-artifacts'
-                    )
-                    withCredentials(
-                        [usernamePassword(credentialsId: 'c1802784-0f74-4b35-99fb-32dfa9a207ad', usernameVariable: 'QUAY_USER', passwordVariable: 'QUAY_PASSWORD')]){
-                        sh 'podman login -u $QUAY_USER -p $QUAY_PASSWORD quay.io'
-                    }
-                    withCredentials([usernamePassword(credentialsId: 'db799772-7708-4ed0-bfe7-0fddfc8088eb', usernameVariable: 'REG_REDHAT_USER', passwordVariable: 'REG_REDHAT_PASSWORD')]){
-                        sh 'podman login -u $REG_REDHAT_USER -p ${REG_REDHAT_PASSWORD} registry.redhat.io'
-                    }
-                    withCredentials([usernamePassword(credentialsId: 'brew-registry-osbs-mirror', usernameVariable: 'BREW_USER', passwordVariable: 'BREW_PASSWORD')]){ 
-                        sh 'podman login -u $BREW_USER -p $BREW_PASSWORD brew.registry.redhat.io'
-                    }
-                    withCredentials([usernamePassword(credentialsId: '41c2dd39-aad7-4f07-afec-efc052b450f5', usernameVariable: 'REG_STAGE_USER', passwordVariable: 'REG_STAGE_PASSWORD')]){
-                        sh 'podman login -u $REG_STAGE_USER -p $REG_STAGE_PASSWORD registry.stage.redhat.io'
-                    }
-
-                    NOO_BUNDLE_VERSION=sh(returnStdout: true, script: '''
-                            #!/usr/bin/env bash
-                            mkdir -p ~/.kube
-                            cp ${WORKSPACE}/flexy-artifacts/workdir/install-dir/auth/kubeconfig ~/.kube/config
-                            RELEASE=$(oc get pods -l app=netobserv-operator -o jsonpath='{.items[*].spec.containers[1].env[0].value}' -A | cut -d 'v' -f 3)
-
-                            # source from 4.12 because jenkins agent are on RHEL 8
-                            curl -sL "https://mirror2.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.12/opm-linux.tar.gz" -o opm-linux.tar.gz
-                            tar xf opm-linux.tar.gz
-                            BUNDLE_IMAGE=$(./opm alpha list bundles $CATALOG_IMAGE netobserv-operator | grep $RELEASE | awk '{print $5}')
-                            oc image info $BUNDLE_IMAGE -o json --filter-by-os linux/amd64 | jq '.config.config.Labels.url' | awk -F '/' '{print $NF}' | tr '\"' ' '
-                        ''').trim()
-                    if (NOO_BUNDLE_VERSION != '') {
-                        println("Found NOO Bundle version: ${NOO_BUNDLE_VERSION}")
+                    BUNDLE_VERSION=sh(returnStdout: true, script: """
+                        $WORKSPACE/ocp-qe-perfscale-ci/scripts/build_info.sh
+                        """).trim()
+                    if (BUNDLE_VERSION != '') {
+                        println("Found NOO Bundle version: ${BUNDLE_VERSION}")
+                        NOO_BUNDLE_VERSION = "${BUNDLE_VERSION}"
+        
                         currentBuild.description += "NetObserv Bundle Version: <b>${NOO_BUNDLE_VERSION}</b><br/>"
                     }
                     else {
@@ -679,46 +657,8 @@ pipeline {
                     else {
                         println('Skipping Kafka configuration...')
                     }
-
-                    templateParams = "-p "
-                    if (params.ENABLE_KAFKA != true) {
-                        templateParams += "DeploymentModel=Direct "
-                    }
-                    if (params.FLP_KAFKA_REPLICAS == "") {
-                        if (params.WORKLOAD == 'node-density-heavy') {
-                            env.FLP_KAFKA_REPLICAS = '6'
-                        }
-                        else if (params.WORKLOAD == 'ingress-perf') {
-                            env.FLP_KAFKA_REPLICAS = '12'
-                        }
-                        else if (params.WORKLOAD == 'cluster-density-v2') {
-                            env.FLP_KAFKA_REPLICAS = '18'
-                        }
-                        else {
-                            env.FLP_KAFKA_REPLICAS = '3'
-                        }
-                    }
-                    templateParams += "KafkaConsumerReplicas=${env.FLP_KAFKA_REPLICAS} "
-
-                    if (params.EBPF_MEMORY_LIMIT != "") {
-                        templateParams += "EBPFMemoryLimit=${params.EBPF_MEMORY_LIMIT} "
-                    }
-                    if (params.EBPF_PRIVILEGED == true){
-                        templateParams += "EBPFPrivileged=${params.EBPF_PRIVILEGED} "
-                    }
-                    if (params.EBPF_SAMPLING_RATE != ""){
-                        templateParams += "EBPFSamplingRate=${params.EBPF_SAMPLING_RATE} "
-                    }
-                    if (params.EBPF_CACHE_MAXFLOWS != ""){
-                        templateParams += "EBPFCacheMaxFlows=${params.EBPF_CACHE_MAXFLOWS} "
-                    }
-                    if (params.LOKI_OPERATOR == 'None') {
-                        templateParams += "LokiEnable=false "
-                    }
-                    if (params.FLP_MEMORY_LIMIT != "") {
-                        templateParams += "FLPMemoryLimit=${params.FLP_MEMORY_LIMIT} "
-                    }                    
-
+                    setKafkaReplicas()
+                    templateParams = setTemplateParams()
                     fcReturnCode = sh(returnStatus: true, script: """
                           source $WORKSPACE/ocp-qe-perfscale-ci/scripts/netobserv.sh
                           createFlowCollector $templateParams
@@ -728,17 +668,6 @@ pipeline {
                     }
                     else {
                         println('Successfully deployed Flowcollector :)')
-                    }
-
-                    if (params.CONTROLLER_MEMORY_LIMIT != '') {
-                        println('Updating NOO memory limit...')
-                        controllerReturnCode = sh(returnStatus: true, script: """
-                            oc -n openshift-netobserv-operator patch csv $RELEASE --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/resources/limits/memory", "value": ${params.CONTROLLER_MEMORY_LIMIT}}]"
-                            sleep 60
-                        """)
-                        if (controllerReturnCode.toInteger() != 0) {
-                            error('Updating controller memory limit failed :(')
-                        }
                     }
                 }
             }
@@ -772,79 +701,87 @@ pipeline {
                 }
             }
         }
-        stage('Run Workload') {
+        stage('Run kube-burner and ingress-perf workload parallel') {
             when {
                 expression { params.WORKLOAD != 'None' }
             }
-            steps {
-                script {
-                    // set build name and remove previous artifacts
-                    currentBuild.displayName = "${currentBuild.displayName}-${params.WORKLOAD}"
-                    sh(script: "rm -rf $WORKSPACE/workload-artifacts/*.json")
-                    // build workload job based off selected workload
-                    if (params.WORKLOAD == 'ingress-perf') {
-                        env.JENKINS_JOB = 'scale-ci/e2e-benchmarking-multibranch-pipeline/ingress-perf'
-                        workloadJob = build job: env.JENKINS_JOB, parameters: [
-                            string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
-                            booleanParam(name: 'CERBERUS_CHECK', value: params.CERBERUS_CHECK),
-                            booleanParam(name: 'MUST_GATHER', value: true),
-                            string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
-                            string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
-                            booleanParam(name: 'GEN_CSV', value: false),
-                            string(name: 'E2E_BENCHMARKING_REPO', value: params.E2E_BENCHMARKING_REPO),
-                            string(name: 'E2E_BENCHMARKING_REPO_BRANCH', value: params.E2E_BENCHMARKING_REPO_BRANCH)
-                        ]
+            parallel {
+                stage('kube-burner workload'){
+                    when {
+                        expression { params.WORKLOAD != 'ingress-perf' }
                     }
-                    else {
-                        env.JENKINS_JOB = 'scale-ci/e2e-benchmarking-multibranch-pipeline/kube-burner-ocp'
-                        workloadJob = build job: env.JENKINS_JOB, parameters: [
-                            string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
-                            string(name: 'WORKLOAD', value: params.WORKLOAD),
-                            booleanParam(name: 'CLEANUP', value: true),
-                            booleanParam(name: 'CERBERUS_CHECK', value: params.CERBERUS_CHECK),
-                            booleanParam(name: 'MUST_GATHER', value: true),
-                            string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
-                            string(name: 'VARIABLE', value: params.VARIABLE), 
-                            string(name: 'NODE_COUNT', value: params.NODE_COUNT),
-                            booleanParam(name: 'GEN_CSV', value: false),
-                            string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
-                            string(name: 'E2E_BENCHMARKING_REPO', value: params.E2E_BENCHMARKING_REPO),
-                            string(name: 'E2E_BENCHMARKING_REPO_BRANCH', value: params.E2E_BENCHMARKING_REPO_BRANCH)
-                        ]
-                    }
-                    // fail pipeline if workload failed
-                    if (workloadJob.result != 'SUCCESS') {
-                        error('Workload job failed :(')
-                    }
-                    // otherwise continue and update build description with workload job link
-                    else {
-                        println("Successfully ran workload job :)")
-                        env.JENKINS_BUILD = "${workloadJob.getNumber()}"
-                        currentBuild.description += "Workload Job: <b><a href=${workloadJob.absoluteUrl}>${env.JENKINS_BUILD}</a></b> (workload <b>${params.WORKLOAD}</b> was run)<br/>"
+                    steps {
+                        script {
+                            // set build name and remove previous artifacts
+                            currentBuild.displayName = "${currentBuild.displayName}-${params.WORKLOAD}"
+                            sh(script: "rm -rf $WORKSPACE/workload-artifacts/*.json")
+                            env.WORKLOAD_JENKINS_JOB = 'scale-ci/e2e-benchmarking-multibranch-pipeline/kube-burner-ocp'
+                            // remove this and have it true by default once 
+                            // CHURN is supported for node-density-heavy
+                            if (params.WORKLOAD == "cluster-density-v2") {
+                                env.CHURN = true
+                            }
+                            else {
+                                env.CHURN = false
+                            }
+                            kubeburnerWorkloadJob = build job: env.WORKLOAD_JENKINS_JOB, parameters: [
+                                string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
+                                string(name: 'WORKLOAD', value: params.WORKLOAD),
+                                booleanParam(name: 'CLEANUP', value: true),
+                                booleanParam(name: 'CERBERUS_CHECK', value: params.CERBERUS_CHECK),
+                                booleanParam(name: 'MUST_GATHER', value: true),
+                                string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
+                                booleanParam(name: 'CHURN', value: env.CHURN),
+                                string(name: 'VARIABLE', value: params.VARIABLE), 
+                                string(name: 'NODE_COUNT', value: params.NODE_COUNT),
+                                booleanParam(name: 'GEN_CSV', value: false),
+                                string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
+                                string(name: 'E2E_BENCHMARKING_REPO', value: params.E2E_BENCHMARKING_REPO),
+                                string(name: 'E2E_BENCHMARKING_REPO_BRANCH', value: params.E2E_BENCHMARKING_REPO_BRANCH)
+                            ]
+                        }
                     }
                 }
-                // copy artifacts from workload job
-                copyArtifacts(
-                    fingerprintArtifacts: true, 
-                    projectName: env.JENKINS_JOB,
-                    selector: specific(env.JENKINS_BUILD),
-                    target: 'workload-artifacts',
-                    flatten: true
-                )
+                stage('Ingress-perf workload'){
+                    when {
+                        expression { params.RUN_INGRESS_PERF_IN_PARALLEL == true || params.WORKLOAD == 'ingress-perf'}
+                    }
+                    steps {
+                        script {
+                            env.INGRESSPERF_JENKINS_JOB = 'scale-ci/e2e-benchmarking-multibranch-pipeline/ingress-perf'
+                            // sleep 10 minutes after triggering kube-burner workload.
+                            if (params.WORKLOAD != 'ingress-perf') {
+                                sleep 600
+                            }
+                            else {
+                                // for nope tool
+                                env.WORKLOAD_JENKINS_JOB = env.INGRESSPERF_JENKINS_JOB
+                                currentBuild.displayName = "${currentBuild.displayName}-${params.WORKLOAD}"
+                            }
+                            env.INGRESSPERF_JENKINS_JOB = 'scale-ci/e2e-benchmarking-multibranch-pipeline/ingress-perf'
+                            ingressWorkloadJob = build job: env.INGRESSPERF_JENKINS_JOB, parameters: [
+                                string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
+                                booleanParam(name: 'CERBERUS_CHECK', value: params.CERBERUS_CHECK),
+                                booleanParam(name: 'MUST_GATHER', value: true),
+                                string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
+                                string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
+                                booleanParam(name: 'GEN_CSV', value: false),
+                                string(name: 'E2E_BENCHMARKING_REPO', value: params.E2E_BENCHMARKING_REPO),
+                                string(name: 'E2E_BENCHMARKING_REPO_BRANCH', value: params.E2E_BENCHMARKING_REPO_BRANCH)
+                            ]
+                        }
+                    }
+                    
+                }
+            }
+        }
+        stage('Capture workload results'){
+            when {
+                expression { params.WORKLOAD != 'None'}
+            }
+            steps {
                 script {
-                    // set new env vars from workload 'index_data' JSON file and update build description fields
-                    workloadInfo = readJSON(file: "$WORKSPACE/workload-artifacts/index_data.json")
-                    workloadInfo.each { env.setProperty(it.key.toUpperCase(), it.value) }
-                    // UUID
-                    currentBuild.description += "<b>UUID:</b> ${env.UUID}<br/>"
-                    // STARTDATE is string rep of start time
-                    currentBuild.description += "<b>STARTDATE:</b> ${env.STARTDATE}<br/>"
-                    // ENDDATE is string rep of end time
-                    currentBuild.description += "<b>ENDDATE:</b> ${env.ENDDATE}<br/>"
-                    // STARTDATEUNIXTIMESTAMP is unix timestamp of start time
-                    currentBuild.description += "<b>STARTDATEUNIXTIMESTAMP:</b> ${env.STARTDATEUNIXTIMESTAMP}<br/>"
-                    // ENDDATEUNIXTIMESTAMP is unix timestamp of end time
-                    currentBuild.description += "<b>ENDDATEUNIXTIMESTAMP:</b> ${env.ENDDATEUNIXTIMESTAMP}<br/>"
+                    captureWorkloadResults()
                 }
             }
         }
@@ -855,12 +792,11 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'elasticsearch-perfscale-ocp-qe', usernameVariable: 'ES_USERNAME', passwordVariable: 'ES_PASSWORD')]) {
                     script {
-                        echo "NOO_BUNDLE_VERSION: ${NOO_BUNDLE_VERSION}"
-                        env.NOO_BUNDLE_VERSION=NOO_BUNDLE_VERSION
                         // construct arguments for NOPE tool and execute
-                        NOPE_ARGS = '--starttime $STARTDATEUNIXTIMESTAMP --endtime $ENDDATEUNIXTIMESTAMP --jenkins-job $JENKINS_JOB --jenkins-build $JENKINS_BUILD --uuid $UUID'
-                        if (env.NOO_BUNDLE_VERSION != ''){
-                            NOPE_ARGS += " --noo-bundle-version $NOO_BUNDLE_VERSION"
+                        NOPE_ARGS = "--starttime $STARTDATEUNIXTIMESTAMP --endtime $ENDDATEUNIXTIMESTAMP --jenkins-job $WORKLOAD_JENKINS_JOB --jenkins-build $JENKINS_BUILD --uuid ${env.UUID}"
+                        if ("${NOO_BUNDLE_VERSION}" != 'null'){
+                            echo "NOO_BUNDLE_VERSION: ${NOO_BUNDLE_VERSION}"
+                            NOPE_ARGS += " --noo-bundle-version ${NOO_BUNDLE_VERSION}"
                         }
                         if (params.NOPE_DUMP_ONLY == true) {
                             NOPE_ARGS += " --dump-only"
@@ -871,14 +807,10 @@ pipeline {
                         if (params.NOPE_JIRA != '') {
                             NOPE_ARGS += " --jira ${params.NOPE_JIRA}"
                         }
+                        env.NOPE_ARGS = NOPE_ARGS
                         nopeReturnCode = sh(returnStatus: true, script: """
-                            python3.9 --version
-                            python3.9 -m pip install virtualenv
-                            python3.9 -m virtualenv venv3
-                            source venv3/bin/activate
-                            python --version
-                            python -m pip install -r $WORKSPACE/ocp-qe-perfscale-ci/scripts/requirements.txt
-                            python $WORKSPACE/ocp-qe-perfscale-ci/scripts/nope.py $NOPE_ARGS
+                            source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                            run_nope_tool "$NOPE_ARGS"
                         """)
                         // fail pipeline if NOPE run failed, continue otherwise
                         if (nopeReturnCode.toInteger() == 2) {
@@ -918,16 +850,10 @@ pipeline {
                         env.GEN_JSON = false
                         env.NETWORK_TYPE = sh(returnStdout: true, script: "oc get network.config/cluster -o jsonpath='{.spec.networkType}'").trim()
                         env.WORKLOAD = params.WORKLOAD
-                        statisticsReturnCode = sh(returnStatus: true, script: '''
-                            python3.9 --version
-                            python3.9 -m pip install virtualenv
-                            python3.9 -m virtualenv venv3
-                            source venv3/bin/activate
-                            python --version
-                            cd $WORKSPACE/e2e-benchmarking/utils
-                            source compare.sh
-                            run_benchmark_comparison > ${BENCHMARK_CSV_LOG}
-                        ''')
+                        statisticsReturnCode = sh(returnStatus: true, script: """
+                            source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                            create_csv
+                        """)
                         
                         if(fileExists("${BENCHMARK_CSV_LOG}")){
                             try {
@@ -956,10 +882,10 @@ pipeline {
                                     if (params.NOPE_DEBUG == true) {
                                         NOPE_ARGS += ' --debug'
                                     }
-                                    NOPE_ARGS += ' baseline --fetch $WORKLOAD'
+                                    NOPE_ARGS += " baseline --fetch $WORKLOAD"
                                     fetchReturnCode = sh(returnStatus: true, script: """
-                                        source venv3/bin/activate
-                                        python $WORKSPACE/ocp-qe-perfscale-ci/scripts/nope.py $NOPE_ARGS
+                                        source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                                        run_nope_tool "$NOPE_ARGS"
                                     """)
                                     if (fetchReturnCode.toInteger() != 0) {
                                         unstable('NOPE baseline fetching failed - run locally with UUIDs to get baseline comparison statistics :(')
@@ -979,19 +905,10 @@ pipeline {
                                     env.COMPARISON_CONFIG = 'netobserv_touchstone_tolerancy_config.json'
                                     // ES_SERVER and ES_SERVER_BASELINE are the same since we store all of our results on the same ES server
                                     env.ES_SERVER_BASELINE = "https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
-                                    baselineReturnCode = sh(returnStatus: true, script: '''
-                                        python3.9 --version
-                                        python3.9 -m pip install virtualenv
-                                        python3.9 -m virtualenv venv3
-                                        source venv3/bin/activate
-                                        python --version
-                                        cd $WORKSPACE/e2e-benchmarking/utils
-                                        rm -rf /tmp/**/*.csv
-                                        rm -rf *.csv
-                                        source compare.sh
-                                        run_benchmark_comparison > ${BENCHMARK_COMP_LOG}
-                                        )
-                                    ''')
+                                    baselineReturnCode = sh(returnStatus: true, script: """
+                                            source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                                            run_comparison
+                                    """)
 
                                     if(fileExists("${BENCHMARK_COMP_LOG}")){
                                         try {
@@ -1000,18 +917,12 @@ pipeline {
                                         } catch (err) {
                                                 println("Failed to capture comparison google sheet  :(")
                                         }
-                                    }    
-
-                                    updateGSheetCode = sh(returnStatus: true, script: '''
-                                        SHEET_ID=$(grep Google ${BENCHMARK_COMP_LOG} | awk -F'/' '{print $NF}' | awk '{print $1}')
-                                        cd $WORKSPACE/ocp-qe-perfscale-ci/scripts/sheets
-                                        python3.9 --version
-                                        python3.9 -m pip install virtualenv
-                                        python3.9 -m virtualenv venv3
-                                        source venv3/bin/activate
-                                        python -m pip install -r requirements.txt
-                                        ./noo_perfsheets_update.py --sheet-id ${SHEET_ID} --uuid1 ${UUID} --uuid2 ${BASELINE_UUID} --service-account ${GSHEET_KEY_LOCATION}
-                                    ''')
+                                    }  
+                                    GSHEET_ADD_ARGS = "--uuid1 ${env.UUID} --uuid2 $BASELINE_UUID --service-account $GSHEET_KEY_LOCATION"
+                                    updateGSheetCode = sh(returnStatus: true, script: """
+                                        source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                                        update_gsheet "$GSHEET_ADD_ARGS"
+                                    """)
 
                                     // mark pipeline as unstable if Touchstone failed, continue otherwise
                                     if (baselineReturnCode.toInteger() != 0) {
@@ -1038,14 +949,8 @@ pipeline {
                                         env.GEN_JSON = true
                                         env.GEN_CSV = false
                                         jsonReturnCode = sh(returnStatus: true, script: """
-                                            python3.9 --version
-                                            python3.9 -m pip install virtualenv
-                                            python3.9 -m virtualenv venv3
-                                            source venv3/bin/activate
-                                            python --version
-                                            cd $WORKSPACE/e2e-benchmarking/utils
-                                            source compare.sh
-                                            run_benchmark_comparison
+                                            source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                                            gen_json_comparison
                                         """)
                                         println('Generated debug JSON for tolerancy analysis :)')
                                     }
@@ -1059,10 +964,10 @@ pipeline {
                                             if (params.NOPE_DEBUG == true) {
                                                 NOPE_ARGS += ' --debug'
                                             }
-                                            NOPE_ARGS += ' baseline --upload $UUID'
+                                            NOPE_ARGS += " baseline --upload ${env.UUID}"
                                             uploadReturnCode = sh(returnStatus: true, script: """
-                                                source venv3/bin/activate
-                                                python $WORKSPACE/ocp-qe-perfscale-ci/scripts/nope.py $NOPE_ARGS
+                                                source $WORKSPACE/ocp-qe-perfscale-ci/scripts/run_py_scripts.sh
+                                                run_nope_tool "$NOPE_ARGS"
                                             """)
                                             if (uploadReturnCode.toInteger() != 0) {
                                                 unstable('NOPE baseline uploading failed - run locally with the UUID from this job to set the new baseline :(')
@@ -1163,4 +1068,131 @@ def validateParams() {
         error('Specify context of this perf run using NOPE_JIRA parameter')
     }
     println('Job params are valid - continuing execution...')
+}
+
+def setKafkaReplicas(){
+    if (params.FLP_KAFKA_REPLICAS == "") {
+        if (params.WORKLOAD == 'node-density-heavy') {
+            env.FLP_KAFKA_REPLICAS = '6'
+        }
+        else if (params.WORKLOAD == 'cluster-density-v2') {
+            env.FLP_KAFKA_REPLICAS = '18'
+        }
+        else {
+            env.FLP_KAFKA_REPLICAS = '3'
+        }
+    }
+}
+
+def setTemplateParams(){
+    def templateParams = "-p "
+    if (params.ENABLE_KAFKA != true) {
+        templateParams += "DeploymentModel=Direct "
+    }
+    templateParams += "KafkaConsumerReplicas=${env.FLP_KAFKA_REPLICAS} "
+    if (params.EBPF_PRIVILEGED == false){
+        templateParams += "EBPFPrivileged=${params.EBPF_PRIVILEGED} "
+    }
+    if (params.EBPF_SAMPLING_RATE != ""){
+        templateParams += "EBPFSamplingRate=${params.EBPF_SAMPLING_RATE} "
+    }
+    if (params.EBPF_CACHE_MAXFLOWS != ""){
+        templateParams += "EBPFCacheMaxFlows=${params.EBPF_CACHE_MAXFLOWS} "
+    }
+    if (params.LOKI_OPERATOR == 'None') {
+        templateParams += "LokiEnable=false "
+    }
+    // increase ebpf memory limit to 1.5Gi for CD workload.
+    if (params.WORKLOAD == 'cluster-density-v2'){
+        templateParams += "EBPFMemoryLimit=1.5Gi "
+    }
+
+    return templateParams
+}
+
+def captureWorkloadResults(){
+    def UUID = ''
+    def JENKINS_BUILD = ''
+
+    if (params.WORKLOAD != 'ingress-perf'){
+        // fail pipeline if workload failed
+        if (kubeburnerWorkloadJob.result != 'SUCCESS') {
+            unstable('kube-burner workload job failed :(')
+        }
+        else {
+            println("Successfully ran workload job :)")
+            env.KUBEBURNER_BUILD = "${kubeburnerWorkloadJob.getNumber()}"
+            currentBuild.description += "Kube-burner workload Job: <b><a href=${kubeburnerWorkloadJob.absoluteUrl}>${env.KUBEBURNER_BUILD}</a></b> (workload <b>${params.WORKLOAD}</b> was run)<br/>"
+        }
+        // copy artifacts from kube-burner-workload job
+        copyArtifacts fingerprintArtifacts: true, projectName: env.WORKLOAD_JENKINS_JOB, selector: specific(env.KUBEBURNER_BUILD), target: 'kube-burner-workload-artifacts', flatten: true
+
+        kubeburnerWorkloadInfo = readJSON(file: "$WORKSPACE/kube-burner-workload-artifacts/index_data.json")
+        kubeburnerStarttime = kubeburnerWorkloadInfo.startDateUnixTimestamp
+        kubeburnerEndtime = kubeburnerWorkloadInfo.endDateUnixTimestamp
+        UUID=kubeburnerWorkloadInfo.uuid
+        JENKINS_BUILD = "${kubeburnerWorkloadJob.getNumber()}"
+    }
+
+     // if ingress-perf was run at all.
+    if (params.RUN_INGRESS_PERF_IN_PARALLEL || params.WORKLOAD == 'ingress-perf'){
+            // fail pipeline if ingress-perf workload failed
+        if (ingressWorkloadJob.result != 'SUCCESS') {
+            unstable('ingress-perf workload job failed :(')
+        }
+        else {
+            // otherwise continue and update build description with workload job link
+            println("Successfully ran workload job :)")
+            env.INGRESSPERF_BUILD = "${ingressWorkloadJob.getNumber()}"
+            currentBuild.description += "Ingress perf workload Job: <b><a href=${ingressWorkloadJob.absoluteUrl}>${env.INGRESSPERF_BUILD}</a></b><br/>"
+        }
+        // copy artifacts from ingress-perf job
+        copyArtifacts fingerprintArtifacts: true, projectName: env.INGRESSPERF_JENKINS_JOB, selector: specific(env.INGRESSPERF_BUILD), target: 'ingressperf-workload-artifacts', flatten: true
+
+        ingressperfWorkloadInfo = readJSON(file: "$WORKSPACE/ingressperf-workload-artifacts/index_data.json")
+        ingressperfStarttime = ingressperfWorkloadInfo.startDateUnixTimestamp
+        ingressperfEndtime = ingressperfWorkloadInfo.endDateUnixTimestamp
+        if (params.WORKLOAD == 'ingress-perf'){
+            UUID=ingressperfWorkloadInfo.uuid
+            JENKINS_BUILD = "${ingressperfWorkloadInfo.getNumber()}"
+        }
+    }
+    
+    // evaluate workload start time and end times
+    def START_TIME = ''
+    def END_TIME = ''
+    if (params.RUN_INGRESS_PERF_IN_PARALLEL) {
+        // use earliest start time
+        if (ingressperfStarttime < kubeburnerStarttime) {
+            START_TIME = ingressperfStarttime
+        }
+        else {
+            START_TIME = kubeburnerStarttime
+        }
+        // use latest end time
+        if (ingressperfEndtime > kubeburnerEndtime){
+            END_TIME = ingressperfEndtime
+        }
+        else {
+            END_TIME = kubeburnerEndtime
+        }
+    }
+    else {
+        if (params.WORKLOAD == 'ingress-perf') {
+            START_TIME = ingressperfStarttime
+            END_TIME = ingressperfEndtime
+        }
+        else {
+            START_TIME = kubeburnerStarttime
+            END_TIME = kubeburnerEndtime
+        }
+    }
+
+    env.UUID = UUID
+    env.JENKINS_BUILD = JENKINS_BUILD
+    env.STARTDATEUNIXTIMESTAMP = START_TIME
+    env.ENDDATEUNIXTIMESTAMP = END_TIME
+    currentBuild.description += "<b>UUID:</b> ${env.UUID}<br/>"
+    currentBuild.description += "<b>STARTDATEUNIXTIMESTAMP:</b> ${env.STARTDATEUNIXTIMESTAMP}<br/>"
+    currentBuild.description += "<b>ENDDATEUNIXTIMESTAMP:</b> ${env.ENDDATEUNIXTIMESTAMP}<br/>"
 }

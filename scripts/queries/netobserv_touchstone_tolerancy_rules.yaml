@@ -17,6 +17,12 @@
 - json_path: ["metric_name", "ebpfFlowsDroppedRatio", "metric_name", "*", "avg(value)"]
   tolerancy: 5
   max_failures: 0
+- json_path: ["metric_name", "nWorkloadBytesProcessedPerMinuteNetobserv", "metric_name", "*", "avg(value)"]
+  tolerancy: -10
+  max_failures: 0
+- json_path: ["metric_name", "nWorkloadBytesProcessedPerMinuteCadvisor", "metric_name", "*", "avg(value)"]
+  tolerancy: -10
+  max_failures: 0
 # CPU totals
 - json_path: ["metric_name", "cpuFLPTotals", "metric_name", "*", "avg(value)"]
   tolerancy: 10

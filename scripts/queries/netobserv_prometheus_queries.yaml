@@ -19,11 +19,11 @@
   metricName: nWorkloadFlowsProcessedPerMinuteTotals
 
 # total bytes processed from workload namespaces by netobserv
-- query: sum(rate(netobserv_workload_ingress_bytes_total{DstK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*",DstK8S_Type!="Service"}[1m])*60)
+- query: sum(rate(netobserv_workload_ingress_bytes_total{DstK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*",SrcK8S_Type!="Service",DstK8S_Type!="Service"}[1m])*60)
   metricName: nWorkloadBytesProcessedPerMinuteNetobserv
 
 # total bytes processed from workload namespaces by cadvisor / other means
-- query: sum(rate(container_network_receive_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="", namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"}[1m])*60)
+- query: sum(rate(container_network_receive_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="", namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*", interface="eth0"}[1m])*60)
   metricName: nWorkloadBytesProcessedPerMinuteCadvisor
 
 # total flows errored

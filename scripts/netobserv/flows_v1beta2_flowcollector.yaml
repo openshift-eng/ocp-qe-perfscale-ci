@@ -19,6 +19,15 @@ objects:
           resources:
             limits:
               memory: ${EBPFMemoryLimit}
+          features:
+          - PacketDrop
+          - DNSTracking
+          - FlowRTT
+          - NetworkEvents
+          flowFilter:
+            action: Accept
+            cidr: 0.0.0.0/0
+            enable: true
       processor:
         resources:
           limits:
@@ -45,7 +54,7 @@ parameters:
   - name: FLPMemoryLimit
     value: "800Mi"
   - name: EBPFPrivileged
-    value: "false"
+    value: "true"
   - name: EBPFCacheMaxFlows
     value: "100000"
   - name: LokiEnable

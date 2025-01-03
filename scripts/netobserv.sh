@@ -6,9 +6,10 @@ export DEFAULT_SC=$(oc get storageclass -o=jsonpath='{.items[?(@.metadata.annota
 deploy_netobserv() {
   echo "====> Deploying NetObserv"
   if [[ -z $INSTALLATION_SOURCE ]]; then
-    echo "Please set INSTALLATION_SOURCE env variable to either 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function"
-    echo "Don't forget to source 'netobserv.sh' again after doing so!"
-    exit 1
+    echo "INSTALLATION_SOURCE env variable is unset. Either it can be set to 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function". Default is 'Internal'
+    echo "Using 'Internal' as INSTALLATION_SOURCE"
+    NOO_SUBSCRIPTION=netobserv-internal-subscription.yaml
+    deploy_downstream_catalogsource
   elif [[ $INSTALLATION_SOURCE == "Official" ]]; then
     echo "Using 'Official' as INSTALLATION_SOURCE"
     NOO_SUBSCRIPTION=netobserv-official-subscription.yaml
@@ -47,7 +48,6 @@ deploy_netobserv() {
 }
 
 createFlowCollector() {
-  set -x
   templateParams=$*
   echo "====> Creating Flow Collector"
   oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/flows_v1beta2_flowcollector.yaml $templateParams -n default -o yaml >/tmp/flowcollector.yaml
@@ -96,6 +96,16 @@ patch_netobserv() {
     exit 1
   fi
 }
+get_loki_channel() {
+  catalog_label=$1
+  channels=$(oc get packagemanifests -l catalog="$catalog_label" -n openshift-marketplace -o jsonpath='{.items[?(@.metadata.name=="loki-operator")].status.channels[*].name}')
+
+  # this works only on bash shell, read command options are different between zsh (commonly used for OSX) and bash shell
+  read -r -a channels_arr <<< $channels
+  len=${#channels_arr[@]}
+  # use the latest channel
+  echo "${channels_arr[$len-1]}"
+}
 
 deploy_lokistack() {
   echo "====> Deploying LokiStack"
@@ -106,16 +116,23 @@ deploy_lokistack() {
   oc apply -f $SCRIPTS_DIR/loki/loki-operatorgroup.yaml
 
   echo "====> Creating netobserv-downstream-testing CatalogSource (if applicable) and Loki Operator Subscription"
-  if [[ $LOKI_OPERATOR == "Released" ]]; then
-    oc apply -f $SCRIPTS_DIR/loki/loki-released-subscription.yaml
-  elif [[ $LOKI_OPERATOR == "Unreleased" ]]; then
+  export LOKI_CHANNEL=''
+  export LOKI_SOURCE=''
+  if [[ $LOKI_OPERATOR == "Unreleased" ]]; then
     deploy_downstream_catalogsource
-    oc apply -f $SCRIPTS_DIR/loki/loki-unreleased-subscription.yaml
+    LOKI_SOURCE="qe-app-registry"
   else
-    echo "====> No Loki Operator config was found - using 'Released'"
-    echo "====> To set config, set LOKI_OPERATOR variable to either 'Released' or 'Unreleased'"
-    oc apply -f $SCRIPTS_DIR/loki/loki-released-subscription.yaml
+    LOKI_SOURCE="redhat-operators"
   fi
+  
+  LOKI_CHANNEL=$(get_loki_channel $LOKI_SOURCE)
+  if [ -z "${LOKI_CHANNEL}" ]; then
+    echo "====> Could not determine loki-operator subscription channel, exiting!!!!"
+    return 1
+  fi
+
+  echo "====> Using Loki chanel ${LOKI_CHANNEL} to subscribe"
+  envsubst < $SCRIPTS_DIR/loki/loki-subscription.yaml | oc apply -f -
 
   echo "====> Generate S3_BUCKET_NAME"
   RAND_SUFFIX=$(tr </dev/urandom -dc 'a-z0-9' | fold -w 6 | head -n 1 || true)
@@ -135,7 +152,10 @@ deploy_lokistack() {
   echo "====> Creating S3 secret for Loki"
   $SCRIPTS_DIR/deploy-loki-aws-secret.sh $S3_BUCKET_NAME
   sleep 60
-  oc wait --timeout=180s --for=condition=ready pod -l app.kubernetes.io/name=loki-operator -n openshift-operators-redhat
+  while :; do
+    oc wait --timeout=180s --for=condition=ready pod -l app.kubernetes.io/name=loki-operator -n openshift-operators-redhat && break
+    sleep 1
+  done
 
   echo "====> Determining LokiStack config"
   if [[ $LOKISTACK_SIZE == "1x.demo" ]]; then
@@ -169,9 +189,11 @@ deploy_downstream_catalogsource() {
 
   echo "====> Determining CatalogSource config"
   if [[ -z $DOWNSTREAM_IMAGE ]]; then
-    echo "====> No image config was found - cannot create CatalogSource"
-    echo "====> To set config, set DOWNSTREAM_IMAGE variable to desired endpoint"
-    exit 1
+    CLUSTER_VERSION=$(oc get clusterversion/version -o jsonpath='{.spec.channel}' | cut -d'-' -f 2)
+    export CLUSTER_VERSION
+    echo "====> No image config was found; will use quay.io/openshift-qe-optional-operators/aosqe-index:v${CLUSTER_VERSION} as index image"
+    DOWNSTREAM_IMAGE="quay.io/openshift-qe-optional-operators/aosqe-index:v${CLUSTER_VERSION}"
+    export DOWNSTREAM_IMAGE
   else
     echo "====> Using image $DOWNSTREAM_IMAGE for CatalogSource"
   fi
@@ -213,6 +235,11 @@ deploy_kafka() {
   oc apply -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml
   sleep 60
   oc wait --timeout=180s --for=condition=ready pod -l name=amq-streams-cluster-operator -n openshift-operators
+
+  # update AMQStreams operator memory limit to 1G as current limits of 384Mi is not enough for 250 nodes scenario
+  CSV_NAME=$(oc get csv -n openshift-operators -l operators.coreos.com/amq-streams.openshift-operators= -o jsonpath='{.items[].metadata.name}')
+  oc -n openshift-operators patch csv $CSV_NAME --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/resources/limits/memory", "value": "1Gi"}]"
+  
   echo "====> Creating kafka-metrics ConfigMap and kafka-resources-metrics PodMonitor"
   oc apply -f "https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/metrics-config.yaml" -n netobserv
   echo "====> Creating kafka-cluster Kafka"
@@ -288,8 +315,7 @@ delete_netobserv_operator() {
 
 delete_loki_operator() {
   echo "====> Deleting Loki Operator Subscription and CSV"
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/loki/loki-released-subscription.yaml
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/loki/loki-unreleased-subscription.yaml
+  oc delete --ignore-not-found sub/loki-operator -n openshift-operators-redhat
   oc delete --ignore-not-found csv -l operators.coreos.com/loki-operator.openshift-operators-redhat -n openshift-operators-redhat
 }
 

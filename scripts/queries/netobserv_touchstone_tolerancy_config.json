@@ -37,73 +37,6 @@
                 ]
             }
         },
-        "ripsaw-kube-burner": [
-            {
-                "filter": {
-                    "metricName.keyword": "namespaceCount"
-                },
-                "buckets": [
-                    "metricName.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "max"
-                    ]
-                }
-            },
-            {
-                "filter": {
-                    "metricName.keyword": "podStatusCount"
-                },
-                "buckets": [
-                    "metricName.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "max"
-                    ]
-                }
-            },
-            {
-                "filter": {
-                    "metricName.keyword": "deploymentCount"
-                },
-                "buckets": [
-                    "metricName.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "max"
-                    ]
-                }
-            },
-            {
-                "filter": {
-                    "metricName.keyword": "replicaSetCount"
-                },
-                "buckets": [
-                    "metricName.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "max"
-                    ]
-                }
-            },
-            {
-                "filter": {
-                    "metricName.keyword": "serviceCount"
-                },
-                "buckets": [
-                    "metricName.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "max"
-                    ]
-                }
-            }
-        ],
         "prod-netobserv-datapoints": [
             {
                 "filter": {
@@ -128,6 +61,32 @@
                 "aggregations": {
                     "value": [
                         "max"
+                    ]
+                }
+            },
+            {
+                "filter": {
+                    "metric_name.keyword": "nWorkloadBytesProcessedPerMinuteNetobserv"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
+                    ]
+                }
+            },
+            {
+                "filter": {
+                    "metric_name.keyword": "nWorkloadBytesProcessedPerMinuteCadvisor"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
                     ]
                 }
             },
@@ -244,13 +203,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -264,13 +216,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -284,13 +229,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -304,13 +242,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -324,13 +255,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -344,13 +268,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -364,13 +281,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -384,13 +294,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -404,13 +307,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -424,13 +320,6 @@
                 ],
                 "aggregations": {
                     "value": [
-                        {
-                            "percentiles": {
-                                "percents": [
-                                    90
-                                ]
-                            }
-                        },
                         "avg"
                     ]
                 }
@@ -466,7 +355,7 @@
                     "metric_name.keyword": "TotalClusterCPUUsage"
                 },
                 "buckets": [
-                    "metadata.resource.keyword"
+                    "metric_name.keyword"
                 ],
                 "aggregations": {
                     "value": [
@@ -479,7 +368,7 @@
                     "metric_name.keyword": "TotalClusterRSSUsage"
                 },
                 "buckets": [
-                    "metadata.resource.keyword"
+                    "metric_name.keyword"
                 ],
                 "aggregations": {
                     "value": [
@@ -518,7 +407,7 @@
                     "metric_name.keyword": "NetObservClusterCPUPercentUtil"
                 },
                 "buckets": [
-                    "metadata.resource.keyword"
+                    "metric_name.keyword"
                 ],
                 "aggregations": {
                     "value": [
@@ -531,7 +420,7 @@
                     "metric_name.keyword": "NetObservClusterMemPercentUtil"
                 },
                 "buckets": [
-                    "metadata.resource.keyword"
+                    "metric_name.keyword"
                 ],
                 "aggregations": {
                     "value": [

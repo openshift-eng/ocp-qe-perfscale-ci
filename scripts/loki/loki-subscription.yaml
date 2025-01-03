@@ -4,7 +4,7 @@ metadata:
   name: loki-operator
   namespace: openshift-operators-redhat
 spec:
-  channel: stable
+  channel: $LOKI_CHANNEL
   name: loki-operator
-  source: redhat-operators
+  source: $LOKI_SOURCE
   sourceNamespace: openshift-marketplace
