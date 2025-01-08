@@ -5,25 +5,29 @@ export DEFAULT_SC=$(oc get storageclass -o=jsonpath='{.items[?(@.metadata.annota
 
 deploy_netobserv() {
   echo "====> Deploying NetObserv"
+  export NETOBSERV_CHANNEL='stable'
+  export NETOBSERV_SOURCE=''
   if [[ -z $INSTALLATION_SOURCE ]]; then
     echo "INSTALLATION_SOURCE env variable is unset. Either it can be set to 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function". Default is 'Internal'
     echo "Using 'Internal' as INSTALLATION_SOURCE"
-    NOO_SUBSCRIPTION=netobserv-internal-subscription.yaml
     deploy_downstream_catalogsource
+    NETOBSERV_SOURCE="netobserv-downstream-testing"
   elif [[ $INSTALLATION_SOURCE == "Official" ]]; then
     echo "Using 'Official' as INSTALLATION_SOURCE"
-    NOO_SUBSCRIPTION=netobserv-official-subscription.yaml
+    NETOBSERV_SOURCE="redhat-operators"
   elif [[ $INSTALLATION_SOURCE == "Internal" ]]; then
     echo "Using 'Internal' as INSTALLATION_SOURCE"
-    NOO_SUBSCRIPTION=netobserv-internal-subscription.yaml
     deploy_downstream_catalogsource
+    NETOBSERV_SOURCE="netobserv-downstream-testing"
   elif [[ $INSTALLATION_SOURCE == "OperatorHub" ]]; then
     echo "Using 'OperatorHub' as INSTALLATION_SOURCE"
-    NOO_SUBSCRIPTION=netobserv-operatorhub-subscription.yaml
+    NETOBSERV_CHANNEL="latest"
+    NETOBSERV_SOURCE="community-operators"
   elif [[ $INSTALLATION_SOURCE == "Source" ]]; then
     echo "Using 'Source' as INSTALLATION_SOURCE"
-    NOO_SUBSCRIPTION=netobserv-source-subscription.yaml
     deploy_upstream_catalogsource
+    NETOBSERV_CHANNEL="latest"
+    NETOBSERV_SOURCE="netobserv-upstream-testing"
   else
     echo "'$INSTALLATION_SOURCE' is not a valid value for INSTALLATION_SOURCE"
     echo "Please set INSTALLATION_SOURCE env variable to either 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function"
@@ -34,7 +38,8 @@ deploy_netobserv() {
   echo "====> Creating openshift-netobserv-operator namespace and OperatorGroup"
   oc apply -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml
   echo "====> Creating NetObserv subscription"
-  oc apply -f $SCRIPTS_DIR/netobserv/$NOO_SUBSCRIPTION
+  oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/netobserv-subscription.yaml -p NETOBSERV_CHANNEL=$NETOBSERV_CHANNEL NETOBSERV_SOURCE=$NETOBSERV_SOURCE -n default -o yaml >/tmp/netobserv-sub.yaml
+  oc apply -n openshift-netobserv-operator -f /tmp/netobserv-sub.yaml
   sleep 60
   oc wait --timeout=180s --for=condition=ready pod -l app=netobserv-operator -n openshift-netobserv-operator
   while :; do
@@ -132,7 +137,8 @@ deploy_lokistack() {
   fi
 
   echo "====> Using Loki chanel ${LOKI_CHANNEL} to subscribe"
-  envsubst < $SCRIPTS_DIR/loki/loki-subscription.yaml | oc apply -f -
+  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/loki-subscription.yaml -p LOKI_CHANNEL=$LOKI_CHANNEL LOKI_SOURCE=$LOKI_SOURCE -n default -o yaml >/tmp/loki-sub.yaml
+  oc apply -n openshift-operators-redhat -f /tmp/loki-sub.yaml
 
   echo "====> Generate S3_BUCKET_NAME"
   RAND_SUFFIX=$(tr </dev/urandom -dc 'a-z0-9' | fold -w 6 | head -n 1 || true)
@@ -158,24 +164,24 @@ deploy_lokistack() {
   done
 
   echo "====> Determining LokiStack config"
+  export SIZE=''
   if [[ $LOKISTACK_SIZE == "1x.demo" ]]; then
-    LokiStack_CONFIG=$SCRIPTS_DIR/loki/lokistack-1x-demo.yaml
+    SIZE="1x.demo"
   elif [[ $LOKISTACK_SIZE == "1x.extra-small" ]]; then
-    LokiStack_CONFIG=$SCRIPTS_DIR/loki/lokistack-1x-exsmall.yaml
+    SIZE="1x.extra-small"
   elif [[ $LOKISTACK_SIZE == "1x.small" ]]; then
-    LokiStack_CONFIG=$SCRIPTS_DIR/loki/lokistack-1x-small.yaml
+    SIZE="1x.small"
   elif [[ $LOKISTACK_SIZE == "1x.medium" ]]; then
-    LokiStack_CONFIG=$SCRIPTS_DIR/loki/lokistack-1x-medium.yaml
+    SIZE="1x.medium"
   else
     echo "====> No LokiStack config was found - using '1x.extra-small'"
     echo "====> To set config, set LOKISTACK_SIZE variable to either '1x.extra-small', '1x.small', or '1x.medium'"
-    LokiStack_CONFIG=$SCRIPTS_DIR/loki/lokistack-1x-exsmall.yaml
+    SIZE="1x.extra-small"
   fi
-  TMP_LOKICONFIG=/tmp/lokiconfig.yaml
-  envsubst <$LokiStack_CONFIG >$TMP_LOKICONFIG
 
   echo "====> Creating LokiStack"
-  oc apply -f $TMP_LOKICONFIG
+  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >/tmp/lokiStack.yaml
+  oc apply -f /tmp/lokiStack.yaml
   sleep 30
   oc wait --timeout=600s --for=condition=ready pod -l app.kubernetes.io/name=lokistack -n netobserv
 
