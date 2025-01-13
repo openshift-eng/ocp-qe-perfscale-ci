@@ -329,9 +329,9 @@ nukeobserv() {
   echo "====> Nuking NetObserv and all related resources"
   delete_kafka
   if [[ $LOKI_OPERATOR != "None" ]]; then
-    delete_s3
     delete_lokistack
     delete_loki_operator
+    delete_s3
   fi
   delete_flowcollector
   delete_netobserv_operator

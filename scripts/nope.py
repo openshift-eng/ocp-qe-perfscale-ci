@@ -42,9 +42,7 @@ END_TIME = None
 STEP = None
 
 # jenkins env constants
-JENKINS_URL = (
-    "https://mastern-jenkins-csb-openshift-qe.apps.ocp-c1.prod.psi.redhat.com/"
-)
+JENKINS_URL = "https://jenkins-csb-openshift-qe-mastern.dno.corp.redhat.com/"
 JENKINS_JOB = None
 JENKINS_BUILD = None
 JENKINS_SERVER = None
@@ -801,6 +799,7 @@ if __name__ == "__main__":
         )
         try:
             JENKINS_SERVER = jenkins.Jenkins(JENKINS_URL)
+            version = JENKINS_SERVER.get_version()
         except Exception as e:
             logging.error("Error connecting to Jenkins server: ", e)
             sys.exit(1)
