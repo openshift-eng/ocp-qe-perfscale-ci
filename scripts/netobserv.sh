@@ -148,11 +148,7 @@ deploy_lokistack() {
     export S3_BUCKET_NAME="netobserv-ocpqe-$USER-$WORKLOAD-$RAND_SUFFIX"
   fi
 
-  # if cluster is to be preserved, do the same for S3 bucket
-  CLUSTER_NAME=$(oc get infrastructure cluster -o jsonpath='{.status.infrastructureName}')
-  if [[ $CLUSTER_NAME =~ "preserve" ]]; then
-    S3_BUCKET_NAME+="-preserve"
-  fi
+  S3_BUCKET_NAME+="-preserve"
   echo "====> S3_BUCKET_NAME is $S3_BUCKET_NAME"
 
   echo "====> Creating S3 secret for Loki"
@@ -266,8 +262,8 @@ deploy_kafka() {
 }
 
 delete_s3() {
+  S3_BUCKET_NAME=$(oc get secrets/s3-secret -n netobserv -o jsonpath='{.data.bucketnames}' | base64 -d)
   echo "====> Getting S3 Bucket Name"
-  S3_BUCKET_NAME=$(/bin/bash -c 'oc extract cm/lokistack-config -n netobserv --keys=config.yaml --confirm --to=/tmp | xargs -I {} egrep bucketnames {} | cut -d: -f 2 | xargs echo -n')
   if [[ -z $S3_BUCKET_NAME ]]; then
     echo "====> Could not get S3 Bucket Name"
   else
@@ -307,10 +303,7 @@ delete_flowcollector() {
 
 delete_netobserv_operator() {
   echo "====> Deleting all NetObserv resources"
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-official-subscription.yaml
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-internal-subscription.yaml
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-operatorhub-subscription.yaml
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-source-subscription.yaml
+  oc delete --ignore-not-found sub/netobserv-operator -n openshift-netobserv-operator
   oc delete --ignore-not-found csv -l operators.coreos.com/netobserv-operator.openshift-netobserv-operator= -n openshift-netobserv-operator
   oc delete --ignore-not-found crd/flowcollectors.flows.netobserv.io
   oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml

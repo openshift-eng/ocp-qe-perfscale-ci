@@ -394,6 +394,387 @@
     },
     {
       "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 77,
+      "panels": [],
+      "title": "Flow Errors",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PF55DCC5EC58ABF5A"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 75,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PF55DCC5EC58ABF5A"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(netobserv_agent_errors_total[1m])*60) by (error)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "agent errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PF55DCC5EC58ABF5A"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 79,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PF55DCC5EC58ABF5A"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(netobserv_ingest_errors[1m])*60) by (stage, type)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Ingest errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PF55DCC5EC58ABF5A"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 81,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PF55DCC5EC58ABF5A"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(netobserv_encode_prom_errors[1m])*60) by (pod)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Prom encode errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PF55DCC5EC58ABF5A"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 83,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PF55DCC5EC58ABF5A"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(netobserv_loki_batch_retries_total[1m])*60) by (pod)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Loki batch retries error",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
       "datasource": {
         "type": "prometheus",
         "uid": "PF55DCC5EC58ABF5A"
@@ -402,7 +783,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 34
       },
       "id": 40,
       "panels": [],
@@ -433,7 +814,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 56,
@@ -576,7 +957,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 44
       },
       "hiddenSeries": false,
       "id": 22,
@@ -667,7 +1048,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 44
       },
       "hiddenSeries": false,
       "id": 6,
@@ -757,7 +1138,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 52
       },
       "hiddenSeries": false,
       "id": 34,
@@ -850,7 +1231,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 52
       },
       "hiddenSeries": false,
       "id": 65,
@@ -938,7 +1319,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 60
       },
       "id": 38,
       "panels": [],
@@ -969,7 +1350,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 61
       },
       "hiddenSeries": false,
       "id": 58,
@@ -1110,7 +1491,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 52
+        "y": 69
       },
       "hiddenSeries": false,
       "id": 26,
@@ -1201,7 +1582,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 52
+        "y": 69
       },
       "hiddenSeries": false,
       "id": 28,
@@ -1293,7 +1674,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 60
+        "y": 77
       },
       "hiddenSeries": false,
       "id": 66,
@@ -1384,7 +1765,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 60
+        "y": 77
       },
       "hiddenSeries": false,
       "id": 30,
@@ -1468,7 +1849,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 68
+        "y": 85
       },
       "id": 73,
       "panels": [],
@@ -1536,7 +1917,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 69
+        "y": 86
       },
       "id": 71,
       "options": {
@@ -1628,7 +2009,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 76
+        "y": 93
       },
       "id": 69,
       "options": {
@@ -1669,7 +2050,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 85
+        "y": 102
       },
       "id": 36,
       "panels": [],
@@ -1699,7 +2080,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 86
+        "y": 103
       },
       "hiddenSeries": false,
       "id": 64,
@@ -1785,7 +2166,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 86
+        "y": 103
       },
       "hiddenSeries": false,
       "id": 10,
@@ -1877,7 +2258,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 94
+        "y": 111
       },
       "hiddenSeries": false,
       "id": 54,
@@ -1970,7 +2351,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 94
+        "y": 111
       },
       "hiddenSeries": false,
       "id": 50,
@@ -2133,13 +2514,13 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "utc",
   "title": "NetObserv Metrics",
   "uid": "hmI9De_nz",
-  "version": 6,
+  "version": 4,
   "weekStart": ""
 }
