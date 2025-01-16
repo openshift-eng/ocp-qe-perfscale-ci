@@ -48,6 +48,11 @@ pipeline {
           defaultValue: "4 m", 
           description: 'Set of time to look back at to find any comparable results'
         )
+        booleanParam(
+          name: "INTERNAL_ES", 
+          defaultValue: false,
+          description: 'Find matching data in the internal instance'
+        )
         text(name: 'ENV_VARS', defaultValue: '', description:'''<p>
                Enter list of additional (optional) Env Vars you'd want to pass to the script, one pair on each line. <br>
                e.g.<br>
@@ -134,8 +139,25 @@ pipeline {
                     # Export those env vars so they could be used by CI Job
                     set -a && source .env_override && set +a
 
-                    export ES_SERVER="https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
+                    if [[ $INTERNAL_ES == "true" ]]; then
+                      n=${#ES_PASSWORD_INTERNAL}
+                      export ES_SERVER="https://$ES_USERNAME_INTERNAL:$ES_PASSWORD_INTERNAL@opensearch.app.intlab.redhat.com"
+                      export ES_URL="https://opensearch.app.intlab.redhat.com"
+                      export ES_PASSWORD=$ES_PASSWORD_INTERNAL
+                      export ES_USERNAME=$ES_USERNAME_INTERNAL
+                      n=${#ES_SERVER}
+                      echo "internal $n"
+                      export es_metadata_index="ospst-perf-scale-ci*"
+                      export es_benchmark_index="ospst-ripsaw-kube-burner*"
 
+
+                    else
+                      echo "qe"
+                      export es_metadata_index="perf_scale_ci*"
+                      export es_benchmark_index="ripsaw-kube-burner*"
+                      export ES_SERVER="https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
+                      export ES_URL="https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com"
+                    fi 
                     
                     python3.9 --version
                     python3.9 -m pip install virtualenv
@@ -143,9 +165,8 @@ pipeline {
                     source venv3/bin/activate
                     python --version
 
-                    pip install elasticsearch==7.13.4
-                    python get_graphana_link.py
-
+                    pip install -r helpful_scripts/es_scripts/requirements.txt
+                    python helpful_scripts/get_graphana_link.py
                     
                     cd e2e-benchmarking/utils/compare
                     pip install -r requirements.txt
