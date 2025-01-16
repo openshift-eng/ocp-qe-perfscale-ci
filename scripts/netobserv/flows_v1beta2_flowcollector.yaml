@@ -24,6 +24,7 @@ objects:
           - DNSTracking
           - FlowRTT
           - NetworkEvents
+          - PacketTranslation
           flowFilter:
             action: Accept
             cidr: 0.0.0.0/0
@@ -43,7 +44,6 @@ objects:
         enable: "${{LokiEnable}}"
         lokiStack:
           name: lokistack
-        writeBatchSize: 10485760 # remove this when NETOBSERV-1766 is fixed
 parameters:
   - name: DeploymentModel
     value: "Kafka"
