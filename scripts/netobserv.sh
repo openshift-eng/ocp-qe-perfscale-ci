@@ -120,12 +120,12 @@ waitForResources(){
     status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n netobserv)
     if [[ $status == "Ready" ]]; then
       rc=0
-      return $rc
+      echo $rc
     fi
     sleep 30
     timeout=$((timeout+30))
   done
-  return $rc
+  echo $rc
 }
 
 deploy_lokistack() {
@@ -193,7 +193,7 @@ deploy_lokistack() {
 
   echo "====> Creating LokiStack"
   oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >/tmp/lokiStack.yaml
-  oc apply -f /tmp/lokiStack.yaml -n netobserv
+  oc apply -f /tmp/lokiStack.yaml
   sleep 30
   echo "====> Waiting lokistack to be ready"
   lokistackReady=$(waitForResources "lokistack/lokistack")
