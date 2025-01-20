@@ -1,7 +1,7 @@
 # use upstream version for perf and reliability testing
 export INSTALLATION_SOURCE=Source
 # will use 'Released' if not set otherwise
-export LOKI_OPERATOR=Unreleased
+export LOKI_OPERATOR=Released
 # will use '1x.extra-small' if not set 
 export LOKISTACK_SIZE=1x.extra-small
 # will use '6' if not set 

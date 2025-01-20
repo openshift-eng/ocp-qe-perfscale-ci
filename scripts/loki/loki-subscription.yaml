@@ -7,13 +7,15 @@ objects:
     kind: Subscription
     metadata:
       name: loki-operator
-      namespace: openshift-operators-redhat
+      namespace: ${NAMESPACE}
     spec:
       channel: ${LOKI_CHANNEL}
       name: loki-operator
       source: ${LOKI_SOURCE}
       sourceNamespace: openshift-marketplace
 parameters:
+  - name: NAMESPACE
+    value: openshift-operators-redhat
   - name: LOKI_CHANNEL
     value: "stable"
   - name: LOKI_SOURCE

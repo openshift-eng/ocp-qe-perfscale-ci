@@ -7,7 +7,7 @@ objects:
     kind: LokiStack
     metadata:
       name: lokistack
-      namespace: netobserv
+      namespace: ${NAMESPACE}
     spec:
       limits:
         global:
@@ -30,6 +30,8 @@ objects:
       size: ${SIZE}
       storageClassName: ${DEFAULT_SC}
 parameters:
+  - name: NAMESPACE
+    value: netobserv
   - name: SIZE
     value: "1x.extra-small"
   - name: DEFAULT_SC
