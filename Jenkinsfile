@@ -929,22 +929,22 @@ pipeline {
                                         unstable('One or more new statistics was not in a tolerable range of baseline statistics :(')
                                         currentBuild.description += "Baseline Comparison: <b>FAILED</b><br/>"
                                         // collect must-gather
-                                        mustGatherJob = build job: 'scale-ci/e2e-benchmarking-multibranch-pipeline/must-gather', parameters: [
-                                            string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
-                                            string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
-                                            string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
-                                        ]
-                                        if (mustGatherJob.result != 'SUCCESS') {
-                                            println('must-gather job failed :(')
-                                        }
-                                        else {
-                                            println("Successfully ran must-gather job :)")
-                                            copyArtifacts(
-                                                fingerprintArtifacts: true,
-                                                projectName: 'scale-ci/e2e-benchmarking-multibranch-pipeline/must-gather',
-                                                selector: specific("${mustGatherJob.getNumber()}"),
-                                            )
-                                        }
+                                        // mustGatherJob = build job: 'scale-ci/e2e-benchmarking-multibranch-pipeline/must-gather', parameters: [
+                                        //     string(name: 'BUILD_NUMBER', value: params.FLEXY_BUILD_NUMBER),
+                                        //     string(name: 'IMAGE', value: NETOBSERV_MUST_GATHER_IMAGE),
+                                        //     string(name: 'JENKINS_AGENT_LABEL', value: params.JENKINS_AGENT_LABEL),
+                                        // ]
+                                        // if (mustGatherJob.result != 'SUCCESS') {
+                                        //     println('must-gather job failed :(')
+                                        // }
+                                        // else {
+                                        //     println("Successfully ran must-gather job :)")
+                                        //     copyArtifacts(
+                                        //         fingerprintArtifacts: true,
+                                        //         projectName: 'scale-ci/e2e-benchmarking-multibranch-pipeline/must-gather',
+                                        //         selector: specific("${mustGatherJob.getNumber()}"),
+                                        //     )
+                                        // }
                                         // rerun Touchstone to generate a JSON for debugging
                                         env.GEN_JSON = true
                                         env.GEN_CSV = false

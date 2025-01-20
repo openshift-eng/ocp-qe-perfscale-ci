@@ -112,6 +112,22 @@ get_loki_channel() {
   echo "${channels_arr[$len-1]}"
 }
 
+waitForResources(){
+  resources=$1
+  timeout=0
+  rc=1
+  while [ $timeout -lt 180 ]; do
+    status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n netobserv)
+    if [[ $status == "Ready" ]]; then
+      rc=0
+      echo $rc
+    fi
+    sleep 30
+    timeout=$((timeout+30))
+  done
+  echo $rc
+}
+
 deploy_lokistack() {
   echo "====> Deploying LokiStack"
   echo "====> Creating NetObserv Project (if it does not already exist)"
@@ -179,8 +195,12 @@ deploy_lokistack() {
   oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >/tmp/lokiStack.yaml
   oc apply -f /tmp/lokiStack.yaml
   sleep 30
-  oc wait --timeout=600s --for=condition=ready pod -l app.kubernetes.io/name=lokistack -n netobserv
-
+  echo "====> Waiting lokistack to be ready"
+  lokistackReady=$(waitForResources "lokistack/lokistack")
+  if [ "${lokistackReady}" == 1 ]; then
+    echo "LokiStack did not become Ready after 180 secs!!!"
+    return 1
+  fi
   echo "====> Configuring Loki rate limit alert"
   oc apply -f $SCRIPTS_DIR/loki/loki-ratelimit-alert.yaml
 }
@@ -279,43 +299,39 @@ delete_s3() {
 
 delete_lokistack() {
   echo "====> Deleting LokiStack"
-  oc delete --ignore-not-found lokistack/lokistack -n netobserv
+  oc delete --ignore-not-found lokistack/lokistack -n netobserv || true
 }
 
+
 delete_kafka() {
-  echo "====> Deleting Kafka (if applicable)"
-  echo "====> Getting Deployment Model"
-  DEPLOYMENT_MODEL=$(oc get flowcollector -o jsonpath='{.items[*].spec.deploymentModel}' -n netobserv)
-  echo "====> Got $DEPLOYMENT_MODEL"
-  if [[ $DEPLOYMENT_MODEL == "Kafka" ]]; then
-    oc delete --ignore-not-found kafkaTopic/network-flows -n netobserv
-    oc delete --ignore-not-found kafka/kafka-cluster -n netobserv
-    oc delete --ignore-not-found -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml
-    oc delete --ignore-not-found csv -l operators.coreos.com/amq-streams.openshift-operators -n openshift-operators
-  fi
+  echo "====> Deleting Kafka"
+  oc delete --ignore-not-found kafkaTopic/network-flows -n netobserv || true
+  oc delete --ignore-not-found kafka/kafka-cluster -n netobserv || true
+  oc delete --ignore-not-found -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml || true
+  oc delete --ignore-not-found csv -l operators.coreos.com/amq-streams.openshift-operators -n openshift-operators || true
 }
 
 delete_flowcollector() {
   echo "====> Deleting Flow Collector"
   # note 'cluster' is the default Flow Collector name, but that may not always be the case
-  oc delete --ignore-not-found flowcollector/cluster
+  oc delete --ignore-not-found flowcollector/cluster || true
 }
 
 delete_netobserv_operator() {
   echo "====> Deleting all NetObserv resources"
-  oc delete --ignore-not-found sub/netobserv-operator -n openshift-netobserv-operator
-  oc delete --ignore-not-found csv -l operators.coreos.com/netobserv-operator.openshift-netobserv-operator= -n openshift-netobserv-operator
-  oc delete --ignore-not-found crd/flowcollectors.flows.netobserv.io
-  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml
+  oc delete --ignore-not-found sub/netobserv-operator -n openshift-netobserv-operator || true
+  oc delete --ignore-not-found csv -l operators.coreos.com/netobserv-operator.openshift-netobserv-operator= -n openshift-netobserv-operator || true
+  oc delete --ignore-not-found crd/flowcollectors.flows.netobserv.io || true
+  oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml || true
   echo "====> Deleting netobserv-upstream-testing and netobserv-downstream-testing CatalogSource (if applicable)"
-  oc delete --ignore-not-found catalogsource/netobserv-upstream-testing -n openshift-marketplace
-  oc delete --ignore-not-found catalogsource/netobserv-downstream-testing -n openshift-marketplace
+  oc delete --ignore-not-found catalogsource/netobserv-upstream-testing -n openshift-marketplace || true
+  oc delete --ignore-not-found catalogsource/netobserv-downstream-testing -n openshift-marketplace || true
 }
 
 delete_loki_operator() {
   echo "====> Deleting Loki Operator Subscription and CSV"
-  oc delete --ignore-not-found sub/loki-operator -n openshift-operators-redhat
-  oc delete --ignore-not-found csv -l operators.coreos.com/loki-operator.openshift-operators-redhat -n openshift-operators-redhat
+  oc delete --ignore-not-found sub/loki-operator -n openshift-operators-redhat || true
+  oc delete --ignore-not-found csv -l operators.coreos.com/loki-operator.openshift-operators-redhat -n openshift-operators-redhat || true
 }
 
 nukeobserv() {
@@ -329,5 +345,5 @@ nukeobserv() {
   delete_flowcollector
   delete_netobserv_operator
   # seperate step as multiple different operators use this namespace
-  oc delete project netobserv
+  oc delete project netobserv  || true
 }

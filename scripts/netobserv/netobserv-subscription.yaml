@@ -7,7 +7,7 @@ objects:
     kind: Subscription
     metadata:
       name: netobserv-operator
-      namespace: openshift-netobserv-operator
+      namespace: ${NAMESPACE}
       labels:
         operators.coreos.com/netobserv-operator.openshift-netobserv-operator: ""
     spec:
@@ -16,6 +16,8 @@ objects:
       source: ${NETOBSERV_SOURCE}
       sourceNamespace: openshift-marketplace 
 parameters:
+  - name: NAMESPACE
+    value: openshift-netobserv-operator
   - name: NETOBSERV_CHANNEL
     value: "stable"
   - name: NETOBSERV_SOURCE
