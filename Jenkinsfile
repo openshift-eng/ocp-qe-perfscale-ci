@@ -8,7 +8,7 @@ pipeline {
         string(name: 'BUILD_NUMBER', defaultValue: '', description: 'Build number of job that has installed the cluster.')
         string(name: 'IMAGE_STREAM', defaultValue: 'openshift/must-gather', description: 'Base image stream of data to gather for the must-gather.')
         string(name: 'IMAGE', defaultValue: '', description: 'Optional image to help get must-gather information on non default areas. See <a href="https://docs.openshift.com/container-platform/4.12/support/gathering-cluster-data.html">docs</a> for more information and options.')
-        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc412',description:
+        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc418',description:
         '''
         scale-ci-static: for static agent that is specific to scale-ci, useful when the jenkins dynamic agent isn't stable
         <br>
