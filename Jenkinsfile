@@ -8,7 +8,7 @@ pipeline {
         string(name: 'BUILD_NUMBER', defaultValue: '', description: 'Build number of job that has installed the cluster.')
         string(name: 'IMAGE_STREAM', defaultValue: 'openshift/must-gather', description: 'Base image stream of data to gather for the must-gather.')
         string(name: 'IMAGE', defaultValue: '', description: 'Optional image to help get must-gather information on non default areas. See <a href="https://docs.openshift.com/container-platform/4.12/support/gathering-cluster-data.html">docs</a> for more information and options.')
-        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc412',description:
+        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc418',description:
         '''
         scale-ci-static: for static agent that is specific to scale-ci, useful when the jenkins dynamic agent isn't stable
         <br>
@@ -34,7 +34,7 @@ pipeline {
     stage('Run Must Gather'){
       agent {
           kubernetes {
-            cloud 'PSI OCP-C1 agents'
+            cloud 'openshift qe jenkins agents'
             yaml """\
               apiVersion: v1
               kind: Pod
@@ -44,7 +44,7 @@ pipeline {
               spec:
                 containers:
                 - name: "jnlp"
-                  image: "image-registry.openshift-image-registry.svc:5000/aosqe/cucushift:${JENKINS_AGENT_LABEL}-rhel8"
+                  image: "images.paas.redhat.com/aos-qe-ci/jenkins-agent-rhel8:cucushift-${JENKINS_AGENT_LABEL}"
                   resources:
                     requests:
                       memory: "8Gi"
