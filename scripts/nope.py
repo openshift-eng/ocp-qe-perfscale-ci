@@ -229,7 +229,7 @@ def get_netobserv_env_info():
     }
     base_commands = {
         "ocp": 'oc get co/authentication -o=jsonpath="{.status.versions[0].version}"',
-        "release": 'oc get pods -l app=netobserv-operator -o jsonpath="{.items[*].spec.containers[1].env[0].value}" -A',
+        "release": 'oc get pods -l app=netobserv-operator -o jsonpath="{.items[*].spec.containers[0].env[5].value}" -A',
         "arch": 'oc get node -o jsonpath="{.items[0].status.nodeInfo.architecture}"',
         "loki": 'oc get sub -n openshift-operators-redhat loki-operator -o jsonpath="{.status.currentCSV}"',
         "deploymentModel": 'oc get flowcollector -o jsonpath="{.items[*].spec.deploymentModel}" -n netobserv',
