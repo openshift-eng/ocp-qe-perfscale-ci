@@ -9,5 +9,5 @@ tar xf opm-linux.tar.gz
 QUAY_REPO_URL="quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator"
 BUNDLE_IMAGE=$(./opm-rhel8 alpha list bundles "$CATALOG_IMAGE" netobserv-operator | grep "$RELEASE" | awk '{print $5}')
 bundle_tag=$(echo "$BUNDLE_IMAGE" | awk -F':' '{print $NF}')
-CREATED_DATE=$(oc image info $QUAY_REPO_URL/network-observability-operator-bundle@sha256:"$bundle_tag" -o json --filter-by-os linux/amd64 | jq '.config.created' | sed 's/"/')
+CREATED_DATE=$(oc image info $QUAY_REPO_URL/network-observability-operator-bundle@sha256:"$bundle_tag" -o json --filter-by-os linux/amd64 | jq '.config.created' | sed 's/"//g')
 echo "$RELEASE-$CREATED_DATE-$bundle_tag"
