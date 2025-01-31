@@ -28,14 +28,15 @@
 
 # total flows errored
 - query:
-    (sum(increase(netobserv_agent_errors_total[1m])) OR on() vector(0))
+    (sum(increase(netobserv_agent_errors_total{severity!="low"}[1m])) OR on() vector(0))
     + (sum(increase(netobserv_ingest_errors[1m])) OR on() vector(0))
     + (sum(increase(netobserv_encode_prom_errors[1m])) OR on() vector(0))
     + (sum(increase(netobserv_loki_batch_retries_total[1m])) OR on() vector(0))
   metricName: nFlowsErroredTotals
 
 # flow errored ratio for flows received in 1 min period
-- query: (sum(increase(netobserv_agent_errors_total[1m])) OR on() vector(0))
+- query:
+    (sum(increase(netobserv_agent_errors_total{severity!="low"}[1m])) OR on() vector(0))
     + (sum(increase(netobserv_ingest_errors[1m])) OR on() vector(0))
     + (sum(increase(netobserv_encode_prom_errors[1m])) OR on() vector(0))
     + (sum(increase(netobserv_loki_batch_retries_total[1m])) OR on() vector(0)) / sum(rate(netobserv_ingest_flows_processed[1m])) > 0.05 or on() vector(0)
@@ -43,7 +44,7 @@
 
 # total flows errored per minute
 - query:
-    (sum(rate(netobserv_agent_errors_total[1m])*60) OR on() vector(0))
+    (sum(rate(netobserv_agent_errors_total{severity!="low"}[1m])*60) OR on() vector(0))
     + (sum(rate(netobserv_ingest_errors[1m])*60) OR on() vector(0))
     + (sum(rate(netobserv_encode_prom_errors[1m])*60) OR on() vector(0))
     + (sum(rate(netobserv_loki_batch_retries_total[1m])*60) OR on() vector(0))
@@ -194,25 +195,24 @@
   metricName: TotalNetObservCPUUsage
 
 # Total NetObserv RSS Usage, assuming Loki and Kafka also runs in netobserv NS
-- query:  (sum(container_memory_rss{namespace=~".*netobserv.*", container=""}) or on() vector(0))
+- query: (sum(container_memory_rss{namespace=~".*netobserv.*", container=""}) or on() vector(0))
   metricName: TotalNetObservRSSUsage
 
 # Total Cluster CPU Usage
-- query:  sum(label_replace(cluster:cpu_usage_cores:sum{prometheus="openshift-monitoring/k8s"}, "resource", "cluster_cpu_usage", "prometheus", ".*")) by (resource)
+- query: sum(label_replace(cluster:cpu_usage_cores:sum{prometheus="openshift-monitoring/k8s"}, "resource", "cluster_cpu_usage", "prometheus", ".*")) by (resource)
   metricName: TotalClusterCPUUsage
 
 # Total Cluster Memory Usage
-- query:  sum(label_replace(cluster:memory_usage_bytes:sum{prometheus="openshift-monitoring/k8s"}, "resource", "cluster_memory_usage", "prometheus", ".*")) by (resource)
+- query: sum(label_replace(cluster:memory_usage_bytes:sum{prometheus="openshift-monitoring/k8s"}, "resource", "cluster_memory_usage", "prometheus", ".*")) by (resource)
   metricName: TotalClusterRSSUsage
 
 # Total Network Transmit bytes/sec
-- query:  sum(instance:node_network_transmit_bytes_excluding_lo:rate1m * on(instance) group_left(role) (label_replace(max by (node) (kube_node_role{role=~".+"}), "instance", "$1", "node", "(.*)")))
+- query: sum(instance:node_network_transmit_bytes_excluding_lo:rate1m * on(instance) group_left(role) (label_replace(max by (node) (kube_node_role{role=~".+"}), "instance", "$1", "node", "(.*)")))
   metricName: TotalNetworkBytesOut
 
 # Total Network Receive bytes/sec
-- query:  sum(instance:node_network_receive_bytes_excluding_lo:rate1m * on(instance) group_left(role) (label_replace(max by (node) (kube_node_role{role=~".+"}), "instance", "$1", "node", "(.*)")))
+- query: sum(instance:node_network_receive_bytes_excluding_lo:rate1m * on(instance) group_left(role) (label_replace(max by (node) (kube_node_role{role=~".+"}), "instance", "$1", "node", "(.*)")))
   metricName: TotalNetworkBytesIn
-
 
 # NetObserv % CPU usage as a factor total cluster CPU usage
 - query: sum(label_replace((((sum(namespace:container_cpu_usage:sum{namespace=~".*netobserv.*"})) / on() group_right() cluster:cpu_usage_cores:sum)*100), "resource", "cpu_usage%", "prometheus", ".*")) by (resource)

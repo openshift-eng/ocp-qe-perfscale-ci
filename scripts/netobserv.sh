@@ -207,14 +207,12 @@ deploy_lokistack() {
 
 deploy_downstream_catalogsource() {
   echo "====> Creating brew-registry ImageContentSourcePolicy"
-  oc apply -f $SCRIPTS_DIR/icsp.yaml
+  oc apply -f $SCRIPTS_DIR/idms.yaml
 
   echo "====> Determining CatalogSource config"
   if [[ -z $DOWNSTREAM_IMAGE ]]; then
-    CLUSTER_VERSION=$(oc get clusterversion/version -o jsonpath='{.spec.channel}' | cut -d'-' -f 2)
-    export CLUSTER_VERSION
-    echo "====> No image config was found; will use quay.io/openshift-qe-optional-operators/aosqe-index:v${CLUSTER_VERSION} as index image"
-    DOWNSTREAM_IMAGE="quay.io/openshift-qe-optional-operators/aosqe-index:v${CLUSTER_VERSION}"
+    echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8 as index image"
+    DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8"
     export DOWNSTREAM_IMAGE
   else
     echo "====> Using image $DOWNSTREAM_IMAGE for CatalogSource"
