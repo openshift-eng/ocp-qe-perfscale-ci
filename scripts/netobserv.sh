@@ -206,7 +206,7 @@ deploy_lokistack() {
 }
 
 deploy_downstream_catalogsource() {
-  echo "====> Creating brew-registry ImageContentSourcePolicy"
+  echo "====> Creating ImageDigestMirrorSet"
   oc apply -f $SCRIPTS_DIR/idms.yaml
 
   echo "====> Determining CatalogSource config"
