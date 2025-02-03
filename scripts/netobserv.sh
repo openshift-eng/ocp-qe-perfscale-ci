@@ -120,7 +120,7 @@ waitForResources(){
     status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n netobserv)
     if [[ $status == "Ready" ]]; then
       rc=0
-      echo $rc
+      break
     fi
     sleep 30
     timeout=$((timeout+30))
@@ -198,7 +198,7 @@ deploy_lokistack() {
   echo "====> Waiting lokistack to be ready"
   lokistackReady=$(waitForResources "lokistack/lokistack")
   if [ "${lokistackReady}" == 1 ]; then
-    echo "LokiStack did not become Ready after 180 secs!!!"
+    echo "LokiStack did not become Ready after 600 secs!!!"
     return 1
   fi
   echo "====> Configuring Loki rate limit alert"
