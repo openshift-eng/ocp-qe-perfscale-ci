@@ -116,7 +116,7 @@ waitForResources(){
   resources=$1
   timeout=0
   rc=1
-  while [ $timeout -lt 180 ]; do
+  while [ $timeout -lt 600 ]; do
     status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n netobserv)
     if [[ $status == "Ready" ]]; then
       rc=0
