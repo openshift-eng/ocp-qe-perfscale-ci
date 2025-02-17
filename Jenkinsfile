@@ -46,7 +46,7 @@ pipeline {
       )
       choice(
           name: 'WORKLOAD',
-          choices: ["cluster-density-v2", "node-density", "node-density-heavy","node-density-cni","pvc-density","networkpolicy-matchexpressions","networkpolicy-matchlabels","networkpolicy-multitenant","crd-scale"],
+          choices: ["cluster-density-v2", "udn-density-pods", "node-density", "node-density-heavy","node-density-cni","pvc-density","networkpolicy-matchexpressions","networkpolicy-matchlabels","networkpolicy-multitenant","crd-scale"],
           description: 'Type of kube-burner job to run'
       )
       booleanParam(
@@ -106,6 +106,11 @@ pipeline {
           Read <a href=https://github.com/openshift-qe/ocp-qe-perfscale-ci/tree/kube-burner/README.md>here</a> for details about each variable
           '''
       )
+      string(
+        name: 'ENABLE_LAYER_3', 
+        defaultValue: "", 
+        description: 'Defaults to blank, true switches to --layer3, when false switches to layer2'
+        )
       choice(
           name: "PROFILE_TYPE",
           choices: ["both","reporting","regular"],
@@ -302,7 +307,12 @@ pipeline {
                             echo "churn true"
                             export EXTRA_FLAGS="--churn=true --churn-delay=${CHURN_DELAY} --churn-duration=${CHURN_DURATION} --churn-percent=${CHURN_PERCENT}"
                         fi
-                        if [[ $WORKLOAD == *"cluster-density"* ]]; then
+
+                        if [[ -n $ENABLE_LAYER_3 ]]; then
+                            export EXTRA_FLAGS="$EXTRA_FLAGS --layer3=${ENABLE_LAYER_3}"
+                        fi
+                    
+                        if [[ $WORKLOAD == *"cluster-density"* || $WORKLOAD =~ "udn-density-pods" ]]; then
                             export ITERATIONS=$VARIABLE
                         elif [[ $WORKLOAD == *"node-density"* ]]; then
                             export EXTRA_FLAGS="$EXTRA_FLAGS --pods-per-node=$VARIABLE"
@@ -312,16 +322,25 @@ pipeline {
                         export EXTRA_FLAGS+=" --gc-metrics=true --profile-type=$PROFILE_TYPE"
                         ./run.sh |& tee "kube-burner-ocp.out"
                         ''')
-                        sh(returnStatus: true, script: '''
-                        ls /tmp
-                        folder_name=$(ls -t -d /tmp/*/ | head -1)
+                        sh(script: '''
+                        
+                        ls -la
+                        folder_name=$(ls -t -d /tmp/*/ | grep -E "[0-9a-f]{8}" | head -1)
                         file_loc=$folder_name"*"
-                        cd workloads/kube-burner-ocp-wrapper
+                        ls workloads/kube-burner-ocp-wrapper
+                        cp -r $file_loc workloads/kube-burner-ocp-wrapper
+
                         ls
-                        cp $file_loc .
+
                         ''')
                     archiveArtifacts(
                         artifacts: 'workloads/kube-burner-ocp-wrapper/kube-burner-ocp.out',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+
+                    archiveArtifacts(
+                        artifacts: 'workloads/kube-burner-ocp-wrapper/pprof-data/*',
                         allowEmptyArchive: true,
                         fingerprint: true
                     )
