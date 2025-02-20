@@ -220,32 +220,7 @@ pipeline {
       }
     }
     stage('Run Storage-Perf Test'){    
-        agent {
-          kubernetes {
-            cloud 'PSI OCP-C1 agents'
-            yaml """\
-              apiVersion: v1
-              kind: Pod
-              metadata:
-                labels:
-                  label: ${JENKINS_AGENT_LABEL}
-              spec:
-                containers:
-                - name: "jnlp"
-                  image: "image-registry.openshift-image-registry.svc:5000/aosqe/cucushift:${JENKINS_AGENT_LABEL}-rhel8"
-                  resources:
-                    requests:
-                      memory: "8Gi"
-                      cpu: "2"
-                    limits:
-                      memory: "8Gi"
-                      cpu: "2"
-                  imagePullPolicy: Always
-                  workingDir: "/home/jenkins/ws"
-                  tty: true
-              """.stripIndent()
-          }
-        }
+        agent { label params['JENKINS_AGENT_LABEL'] }
         steps {
             deleteDir()
             checkout([
