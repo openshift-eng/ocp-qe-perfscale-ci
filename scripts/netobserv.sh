@@ -3,6 +3,10 @@
 SCRIPTS_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 export DEFAULT_SC=$(oc get storageclass -o=jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
 
+if [[ -z "${ARTIFACT_DIR}" ]]; then
+  ARTIFACT_DIR=/tmp
+fi
+
 deploy_netobserv() {
   echo "====> Deploying NetObserv"
   export NETOBSERV_CHANNEL='stable'
@@ -38,8 +42,8 @@ deploy_netobserv() {
   echo "====> Creating openshift-netobserv-operator namespace and OperatorGroup"
   oc apply -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml
   echo "====> Creating NetObserv subscription"
-  oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/netobserv-subscription.yaml -p NETOBSERV_CHANNEL=$NETOBSERV_CHANNEL NETOBSERV_SOURCE=$NETOBSERV_SOURCE -n default -o yaml >/tmp/netobserv-sub.yaml
-  oc apply -n openshift-netobserv-operator -f /tmp/netobserv-sub.yaml
+  oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/netobserv-subscription.yaml -p NETOBSERV_CHANNEL=$NETOBSERV_CHANNEL NETOBSERV_SOURCE=$NETOBSERV_SOURCE -n default -o yaml >"$ARTIFACT_DIR"/netobserv-sub.yaml
+  oc apply -n openshift-netobserv-operator -f "$ARTIFACT_DIR"/netobserv-sub.yaml
   sleep 60
   oc wait --timeout=180s --for=condition=ready pod -l app=netobserv-operator -n openshift-netobserv-operator
   while :; do
@@ -55,8 +59,8 @@ deploy_netobserv() {
 createFlowCollector() {
   templateParams=$*
   echo "====> Creating Flow Collector"
-  oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/flows_v1beta2_flowcollector.yaml $templateParams -n default -o yaml >/tmp/flowcollector.yaml
-  oc apply -f /tmp/flowcollector.yaml
+  oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/flows_v1beta2_flowcollector.yaml $templateParams -n default -o yaml >"$ARTIFACT_DIR"/flowcollector.yaml
+  oc apply -f "$ARTIFACT_DIR"/flowcollector.yaml
   waitForFlowcollectorReady
 }
 
@@ -153,8 +157,8 @@ deploy_lokistack() {
   fi
 
   echo "====> Using Loki chanel ${LOKI_CHANNEL} to subscribe"
-  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/loki-subscription.yaml -p LOKI_CHANNEL=$LOKI_CHANNEL LOKI_SOURCE=$LOKI_SOURCE -n default -o yaml >/tmp/loki-sub.yaml
-  oc apply -n openshift-operators-redhat -f /tmp/loki-sub.yaml
+  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/loki-subscription.yaml -p LOKI_CHANNEL=$LOKI_CHANNEL LOKI_SOURCE=$LOKI_SOURCE -n default -o yaml >"$ARTIFACT_DIR"/loki-sub.yaml
+  oc apply -n openshift-operators-redhat -f "$ARTIFACT_DIR"/loki-sub.yaml
 
   echo "====> Generate S3_BUCKET_NAME"
   RAND_SUFFIX=$(tr </dev/urandom -dc 'a-z0-9' | fold -w 6 | head -n 1 || true)
@@ -192,8 +196,8 @@ deploy_lokistack() {
   fi
 
   echo "====> Creating LokiStack"
-  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >/tmp/lokiStack.yaml
-  oc apply -f /tmp/lokiStack.yaml
+  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >"$ARTIFACT_DIR"/lokiStack.yaml
+  oc apply -f "$ARTIFACT_DIR"/lokiStack.yaml
   sleep 30
   echo "====> Waiting lokistack to be ready"
   lokistackReady=$(waitForResources "lokistack/lokistack")
@@ -219,7 +223,7 @@ deploy_downstream_catalogsource() {
   fi
 
   CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-downstream-testing.yaml
-  TMP_CATALOGCONFIG=/tmp/catalogconfig.yaml
+  TMP_CATALOGCONFIG="$ARTIFACT_DIR"/catalogconfig.yaml
   envsubst <$CatalogSource_CONFIG >$TMP_CATALOGCONFIG
 
   echo "====> Creating netobserv-downstream-testing CatalogSource"
@@ -239,7 +243,7 @@ deploy_upstream_catalogsource() {
   fi
 
   CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-upstream-testing.yaml
-  TMP_CATALOGCONFIG=/tmp/catalogconfig.yaml
+  TMP_CATALOGCONFIG="$ARTIFACT_DIR"/catalogconfig.yaml
   envsubst <$CatalogSource_CONFIG >$TMP_CATALOGCONFIG
 
   echo "====> Creating netobserv-upstream-testing CatalogSource from the main bundle"
@@ -272,7 +276,7 @@ deploy_kafka() {
     export TOPIC_PARTITIONS=6
   fi
   KAFKA_TOPIC=$SCRIPTS_DIR/amq-streams/kafkaTopic.yaml
-  TMP_KAFKA_TOPIC=/tmp/topic.yaml
+  TMP_KAFKA_TOPIC="$ARTIFACT_DIR"/topic.yaml
   envsubst <$KAFKA_TOPIC >$TMP_KAFKA_TOPIC
   oc apply -f $TMP_KAFKA_TOPIC -n netobserv
   sleep 120
