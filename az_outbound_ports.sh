@@ -30,6 +30,12 @@ function getResourceGroup() {
     export RESOURCE_GROUP
 }
 
+
+function getResourceGroup2() {
+    machine_api=$( oc get machinesets --no-headers -A -o name | head -n1)
+    RESOURCE_GROUP=$(oc get $machine_api -o yaml -n openshift-machine-api  | yq .spec.template.spec.providerSpec.value.resourceGroup | tr -d '"')
+
+}
 cli_Login
 
 OUTBOUND_PORTS=${OUTBOUND_PORTS:="64"}
@@ -37,7 +43,13 @@ OUTBOUND_RULE_NAME=${OutboundNATAllProtocols:="OutboundNATAllProtocols"}
 
 getResourceGroup
 
+ 
 LOAD_BALACER="$(az network lb list -g $RESOURCE_GROUP | jq -r '.[].name' | grep -v internal)"
+
+if [[ -z $LOAD_BALACER ]]; then 
+
+    getResourceGroup2
+fi 
 
 echo "Check outbound port"
 az network lb outbound-rule list -g $RESOURCE_GROUP -o table --lb-name $LOAD_BALACER
