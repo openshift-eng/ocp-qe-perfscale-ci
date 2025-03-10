@@ -234,7 +234,7 @@ def test_profile(folder_path, fileName):
 #Get Google sheet secret
 gsheet_key_location = os.getenv('GSHEET_KEY_LOCATION')
 gsheet_location = os.getenv('GSHEET_LOCATION', 'https://docs.google.com/spreadsheets/d/1TM73n4Y6zKRQjvCX8zFM0LwYxChdsncTEGPHpdsS9Ig')
-jobs_folder_location = os.getenv('JOBS_FOLDER_LOCATION', 'openshift-qe/ocp-qe-perfscale-ci')
+jobs_folder_location = os.getenv('JOBS_FOLDER_LOCATION', 'openshift-eng/ocp-qe-perfscale-ci')
 
 if not gsheet_key_location:
     print("GSHEET_KEY_LOCATION is not set.")
