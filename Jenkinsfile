@@ -147,7 +147,7 @@ pipeline {
                 [$class: 'IgnoreNotifyCommit'],
                 [$class: 'RelativeTargetDirectory', relativeTargetDir: 'helpful_scripts']
             ],
-            userRemoteConfigs: [[url: "https://github.com/openshift-qe/ocp-qe-perfscale-ci.git" ]]
+            userRemoteConfigs: [[url: "https://github.com/openshift-eng/ocp-qe-perfscale-ci.git" ]]
         ])
         
         script{
