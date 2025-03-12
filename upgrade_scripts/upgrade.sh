@@ -63,12 +63,14 @@ echo "eus $eus"
 sleep 120
 #capture_failed_pods_before_upgrade
 python3 -c "import check_upgrade; check_upgrade.set_max_unavailable($maxUnavail)"
-echo ARCH_TYPE is $ARCH_TYPE
-if [[ $ARCH_TYPE == multi* ]];then
+
+#Get the node architecture type
+node_architectures=$(oc get nodes -o jsonpath='{.items[*].status.nodeInfo.architecture}')
+if echo "$node_architectures" | grep -q "amd64" && echo "$node_architectures" | grep -q "arm64"; then
     node_arch="multi"
 else
-    node_name=`oc get node | grep master| head -1| awk '{print $1}'`
-    node_arch=`oc get node $node_name -ojsonpath='{.status.nodeInfo.architecture}'`
+    node_name=$(oc get node | grep master| head -1| awk '{print $1}')
+    node_arch=$(oc get node $node_name -ojsonpath='{.status.nodeInfo.architecture}')
 fi
 
 
