@@ -65,8 +65,8 @@ sleep 120
 python3 -c "import check_upgrade; check_upgrade.set_max_unavailable($maxUnavail)"
 
 #Get the node architecture type
-image_stream_tag=$(oc get istag cli-artifacts:latest -n openshift -o yaml)
-if echo "$image_stream_tag" | grep -q "architecture: amd64" && echo "$image_stream_tag" | grep -q "architecture: arm64"; then
+node_architectures=$(oc get nodes -o jsonpath='{.items[*].status.nodeInfo.architecture}')
+if echo "$node_architectures" | grep -q "amd64" && echo "$node_architectures" | grep -q "arm64"; then
     node_arch="multi"
 else
     node_name=$(oc get node | grep master| head -1| awk '{print $1}')
