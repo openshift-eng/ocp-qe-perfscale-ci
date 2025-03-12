@@ -156,7 +156,7 @@ pipeline {
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: 'main' ]],
-                    userRemoteConfigs: [[url: "https://github.com/openshift-qe/ocp-qe-perfscale-ci" ]],
+                    userRemoteConfigs: [[url: "https://github.com/openshift-eng/ocp-qe-perfscale-ci" ]],
                     extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'helpful_scripts']]
                 ])
                 copyArtifacts(
