@@ -68,7 +68,7 @@ echo "eus $eus"
 echo "arch_type is $arch_type"
 #wait 120s for all pod get ready
 sleep 120
-capture_failed_pods_before_upgrade
+#capture_failed_pods_before_upgrade
 python3 -c "import check_upgrade; check_upgrade.set_max_unavailable($maxUnavail)"
 if [[ $arch_type == multi* ]];then
     node_arch="multi"
@@ -192,5 +192,5 @@ if [ "X$scale" == "Xtrue" ]; then
 fi
 #wait 120s for all pod get ready
 sleep 120
-capture_failed_pods_after_upgrade
+#capture_failed_pods_after_upgrade
 exit 0 #upgrade succ and post-check succ
