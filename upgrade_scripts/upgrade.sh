@@ -16,7 +16,6 @@ scale=false
 eus=false
 eus_channel="fast"
 maxUnavail=1
-arch_type=""
 #optional parameters
 while [[ $# -gt 1 ]]
 do
@@ -49,11 +48,6 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    -a|--arch)
-    arch_type=$2
-    shift # past argument
-    shift # past value
-    ;;
     *)    # unknown option
     #need to get past file
     shift # past arg
@@ -65,16 +59,18 @@ echo "force $enable_force"
 echo "scale $scale"
 echo "target version $taget_build_arr"
 echo "eus $eus"
-echo "arch_type is $arch_type"
 #wait 120s for all pod get ready
 sleep 120
 #capture_failed_pods_before_upgrade
 python3 -c "import check_upgrade; check_upgrade.set_max_unavailable($maxUnavail)"
-if [[ $arch_type == multi* ]];then
+
+#Get the node architecture type
+image_stream_tag=$(oc get istag cli-artifacts:latest -n openshift -o yaml)
+if echo "$image_stream_tag" | grep -q "architecture: amd64" && echo "$image_stream_tag" | grep -q "architecture: arm64"; then
     node_arch="multi"
 else
-    node_name=`oc get node | grep master| head -1| awk '{print $1}'`
-    node_arch=`oc get node $node_name -ojsonpath='{.status.nodeInfo.architecture}'`
+    node_name=$(oc get node | grep master| head -1| awk '{print $1}')
+    node_arch=$(oc get node $node_name -ojsonpath='{.status.nodeInfo.architecture}')
 fi
 
 
