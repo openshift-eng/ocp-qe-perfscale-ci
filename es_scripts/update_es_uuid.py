@@ -2,8 +2,7 @@ import os
 import time
 from elasticsearch import Elasticsearch
 import urllib3
-
-
+import elasticsearch
 
 # elasticsearch constants
 ES_URL = os.environ.get('ES_URL','search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com')
@@ -77,6 +76,17 @@ def es_search(params, wildcard="", should="",must_not="", index='perfscale-jenki
         return search_result['hits']['hits']
 
     return hits
+
+def fetch_uuids_from_es():
+    es = elasticsearch.Elasticsearch()
+    query = {
+        "query": {
+            "match_all": {}
+        }
+    }
+    response = es.search(index="perf_scale_ci", body=query)
+    uuids = [hit["_source"]["uuid"] for hit in response["hits"]["hits"]]
+    return uuids
 
 def delete_es_entry(id, index = 'perfscale-jenkins-metadata'):
     # create Elasticsearch object and attempt index
