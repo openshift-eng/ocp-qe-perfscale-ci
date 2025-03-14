@@ -32,7 +32,7 @@ START_TIME = None
 END_TIME = None
 
 # jenkins env constants
-JENKINS_URL = 'https://mastern-jenkins-csb-openshift-qe.apps.ocp-c1.prod.psi.redhat.com/'
+JENKINS_URL = 'https://jenkins-csb-openshift-qe-mastern.dno.corp.redhat.com/'
 JENKINS_JOB = os.getenv("JENKINS_JOB_PATH")
 jenkins_build = os.getenv("JENKINS_JOB_NUMBER")
 JENKINS_SERVER = None
