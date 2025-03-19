@@ -10,19 +10,17 @@ fi
 deploy_netobserv() {
   echo "====> Deploying NetObserv"
   export NETOBSERV_CHANNEL='stable'
-  export NETOBSERV_SOURCE=''
+  export NETOBSERV_SOURCE="netobserv-testing"
   if [[ -z $INSTALLATION_SOURCE ]]; then
     echo "INSTALLATION_SOURCE env variable is unset. Either it can be set to 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function". Default is 'Internal'
     echo "Using 'Internal' as INSTALLATION_SOURCE"
     deploy_downstream_catalogsource
-    NETOBSERV_SOURCE="netobserv-downstream-testing"
   elif [[ $INSTALLATION_SOURCE == "Official" ]]; then
     echo "Using 'Official' as INSTALLATION_SOURCE"
     NETOBSERV_SOURCE="redhat-operators"
   elif [[ $INSTALLATION_SOURCE == "Internal" ]]; then
     echo "Using 'Internal' as INSTALLATION_SOURCE"
     deploy_downstream_catalogsource
-    NETOBSERV_SOURCE="netobserv-downstream-testing"
   elif [[ $INSTALLATION_SOURCE == "OperatorHub" ]]; then
     echo "Using 'OperatorHub' as INSTALLATION_SOURCE"
     NETOBSERV_CHANNEL="latest"
@@ -31,7 +29,6 @@ deploy_netobserv() {
     echo "Using 'Source' as INSTALLATION_SOURCE"
     deploy_upstream_catalogsource
     NETOBSERV_CHANNEL="latest"
-    NETOBSERV_SOURCE="netobserv-upstream-testing"
   else
     echo "'$INSTALLATION_SOURCE' is not a valid value for INSTALLATION_SOURCE"
     echo "Please set INSTALLATION_SOURCE env variable to either 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function"
@@ -140,7 +137,7 @@ deploy_lokistack() {
   echo "====> Creating openshift-operators-redhat Namespace and OperatorGroup"
   oc apply -f $SCRIPTS_DIR/loki/loki-operatorgroup.yaml
 
-  echo "====> Creating netobserv-downstream-testing CatalogSource (if applicable) and Loki Operator Subscription"
+  echo "====> Creating netobserv-testing CatalogSource (if applicable) and Loki Operator Subscription"
   export LOKI_CHANNEL=''
   export LOKI_SOURCE=''
   if [[ $LOKI_OPERATOR == "Unreleased" ]]; then
@@ -163,9 +160,9 @@ deploy_lokistack() {
   echo "====> Generate S3_BUCKET_NAME"
   RAND_SUFFIX=$(tr </dev/urandom -dc 'a-z0-9' | fold -w 6 | head -n 1 || true)
   if [[ $WORKLOAD == "None" ]] || [[ -z $WORKLOAD ]]; then
-    export S3_BUCKET_NAME="netobserv-ocpqe-$USER-$RAND_SUFFIX"
+    export S3_BUCKET_NAME="netobserv-ocpqe-$RAND_SUFFIX"
   else
-    export S3_BUCKET_NAME="netobserv-ocpqe-$USER-$WORKLOAD-$RAND_SUFFIX"
+    export S3_BUCKET_NAME="netobserv-ocpqe-$WORKLOAD-$RAND_SUFFIX"
   fi
 
   S3_BUCKET_NAME+="-preserve"
@@ -217,19 +214,15 @@ deploy_downstream_catalogsource() {
   if [[ -z $DOWNSTREAM_IMAGE ]]; then
     echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8 as index image"
     DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8"
-    export DOWNSTREAM_IMAGE
   else
     echo "====> Using image $DOWNSTREAM_IMAGE for CatalogSource"
   fi
 
-  CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-downstream-testing.yaml
-  TMP_CATALOGCONFIG="$ARTIFACT_DIR"/catalogconfig.yaml
-  envsubst <$CatalogSource_CONFIG >$TMP_CATALOGCONFIG
-
-  echo "====> Creating netobserv-downstream-testing CatalogSource"
-  oc apply -f $TMP_CATALOGCONFIG
+  CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-cs.yaml
+  oc process -f "$CatalogSource_CONFIG" -p CATALOGSOURCE_IMAGE="$DOWNSTREAM_IMAGE" -n netobserv | oc apply -n openshift-marketplace -f -
+  echo "====> Creating netobserv-testing CatalogSource"
   sleep 30
-  oc wait --timeout=180s --for=condition=ready pod -l olm.catalogSource=netobserv-downstream-testing -n openshift-marketplace
+  oc wait --timeout=180s --for=condition=ready pod -l olm.catalogSource=netobserv-testing -n openshift-marketplace
 }
 
 deploy_upstream_catalogsource() {
@@ -242,19 +235,16 @@ deploy_upstream_catalogsource() {
     echo "====> Using image $UPSTREAM_IMAGE for CatalogSource"
   fi
 
-  CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-upstream-testing.yaml
-  TMP_CATALOGCONFIG="$ARTIFACT_DIR"/catalogconfig.yaml
-  envsubst <$CatalogSource_CONFIG >$TMP_CATALOGCONFIG
-
-  echo "====> Creating netobserv-upstream-testing CatalogSource from the main bundle"
-  oc apply -f $TMP_CATALOGCONFIG
+  CatalogSource_CONFIG=$SCRIPTS_DIR/catalogsources/netobserv-cs.yaml
+  oc process -f "$CatalogSource_CONFIG" -p CATALOGSOURCE_IMAGE="$UPSTREAM_IMAGE" -n netobserv | oc apply -n openshift-marketplace -f -
+  echo "====> Creating netobserv-testing CatalogSource from the main bundle"
   sleep 30
-  oc wait --timeout=180s --for=condition=ready pod -l olm.catalogSource=netobserv-upstream-testing -n openshift-marketplace
+  oc wait --timeout=180s --for=condition=ready pod -l olm.catalogSource=netobserv-testing -n openshift-marketplace
 }
 
 deploy_kafka() {
   echo "====> Deploying Kafka"
-  oc create namespace netobserv --dry-run=client -o yaml | oc apply -f -
+  oc new-project netobserv || true
   echo "====> Creating amq-streams Subscription"
   oc apply -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml
   sleep 60
@@ -267,7 +257,7 @@ deploy_kafka() {
   echo "====> Creating kafka-metrics ConfigMap and kafka-resources-metrics PodMonitor"
   oc apply -f "https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/metrics-config.yaml" -n netobserv
   echo "====> Creating kafka-cluster Kafka"
-  curl -s -L "https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/default.yaml" | envsubst | oc apply -n netobserv -f -
+  oc process -f https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/default.yaml -p DEFAULT_SC="$DEFAULT_SC" -n netobserv | oc apply -n netobserv -f -
 
   echo "====> Creating network-flows KafkaTopic"
   if [[ -z $TOPIC_PARTITIONS ]]; then
@@ -275,10 +265,7 @@ deploy_kafka() {
     echo "====> To set config, set TOPIC_PARTITIONS variable to desired number"
     export TOPIC_PARTITIONS=6
   fi
-  KAFKA_TOPIC=$SCRIPTS_DIR/amq-streams/kafkaTopic.yaml
-  TMP_KAFKA_TOPIC="$ARTIFACT_DIR"/topic.yaml
-  envsubst <$KAFKA_TOPIC >$TMP_KAFKA_TOPIC
-  oc apply -f $TMP_KAFKA_TOPIC -n netobserv
+  oc process -f $SCRIPTS_DIR/amq-streams/kafkaTopic.yaml -p TOPIC_PARTITIONS="$TOPIC_PARTITIONS" -n netobserv | oc apply -n netobserv -f -
   sleep 120
   oc wait --timeout=180s --for=condition=ready kafkatopic network-flows -n netobserv
 }
@@ -325,9 +312,8 @@ delete_netobserv_operator() {
   oc delete --ignore-not-found csv -l operators.coreos.com/netobserv-operator.openshift-netobserv-operator= -n openshift-netobserv-operator || true
   oc delete --ignore-not-found crd/flowcollectors.flows.netobserv.io || true
   oc delete --ignore-not-found -f $SCRIPTS_DIR/netobserv/netobserv-ns_og.yaml || true
-  echo "====> Deleting netobserv-upstream-testing and netobserv-downstream-testing CatalogSource (if applicable)"
-  oc delete --ignore-not-found catalogsource/netobserv-upstream-testing -n openshift-marketplace || true
-  oc delete --ignore-not-found catalogsource/netobserv-downstream-testing -n openshift-marketplace || true
+  echo "====> Deleting netobserv-testing CatalogSource"
+  oc delete --ignore-not-found catalogsource/netobserv-testing -n openshift-marketplace || true
 }
 
 delete_loki_operator() {

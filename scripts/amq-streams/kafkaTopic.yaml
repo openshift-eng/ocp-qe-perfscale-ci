@@ -1,10 +1,17 @@
-kind: KafkaTopic
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: template.openshift.io/v1
+kind: Template
 metadata:
-  name: network-flows
-  labels:
-    strimzi.io/cluster: kafka-cluster
-  namespace: netobserv
-spec:
-  partitions: ${TOPIC_PARTITIONS}
-  replicas: 1
+  name: netobserv-catalogsource-template
+objects:
+  - apiVersion: kafka.strimzi.io/v1beta2
+    kind: KafkaTopic
+    metadata:
+      name: network-flows
+      labels:
+        strimzi.io/cluster: kafka-cluster
+    spec:
+      partitions: ${{TOPIC_PARTITIONS}}
+      replicas: 1
+parameters:
+  - name: TOPIC_PARTITIONS
+    value: "6"

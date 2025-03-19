@@ -1,0 +1,22 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: netobserv-catalogsource-template
+objects:
+  - apiVersion: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    metadata:
+      name: ${NAME}
+    spec:
+      sourceType: grpc
+      image: ${CATALOGSOURCE_IMAGE}
+      displayName: NetObserv Testing
+      publisher: NetObserv QE
+      updateStrategy:
+        registryPoll:
+          interval: 1m
+parameters:
+  - name: NAME
+    value: netobserv-testing
+  - name: CATALOGSOURCE_IMAGE
+    value: quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8
