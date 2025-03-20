@@ -161,9 +161,9 @@ pipeline {
                     ]) {
                         env.AWS_ACCESS_KEY_ID = sh(script: "cat \$AWS_CREDS | awk -F' = ' '/^aws_access_key_id/ {print \$2}'", returnStdout: true).trim()
                         env.AWS_SECRET_ACCESS_KEY = sh(script: "cat \$AWS_CREDS | awk -F' = ' '/^aws_secret_access_key/ {print \$2}'", returnStdout: true).trim()
-                        env.ORCHESTRATION_HOST = sh(script: "cat \$INFRA | base64 --decode | awk -F' = ' '/^ORCHESTRATION_HOST/ {print \$2}'", returnStdout: true).trim()
-                        env.PROM_URL = sh(script: "cat \$INFRA | base64 --decode | awk -F' = ' '/^PROM_URL/ {print \$2}'", returnStdout: true).trim()
-                        env.ES_SERVER_URL = sh(script: "cat \$INFRA | base64 --decode | awk -F' = ' '/^ES_SERVER/ {print \$2}'", returnStdout: true).trim()
+                        env.ORCHESTRATION_HOST = sh(script: "cat \$INFRA | awk -F' = ' '/^ORCHESTRATION_HOST/ {print \$2}'", returnStdout: true).trim()
+                        env.PROM_URL = sh(script: "cat \$INFRA | awk -F' = ' '/^PROM_URL/ {print \$2}'", returnStdout: true).trim()
+                        env.ES_SERVER_URL = sh(script: "cat \$INFRA | awk -F' = ' '/^ES_SERVER/ {print \$2}'", returnStdout: true).trim()
                         sh '''
                         ./scripts/run_ocm_benchmark.sh -o ocm-api-load
                         sleep 60
