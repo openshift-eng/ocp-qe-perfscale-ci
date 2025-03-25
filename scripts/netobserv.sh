@@ -278,11 +278,17 @@ delete_s3() {
   else
     echo "====> Got $S3_BUCKET_NAME"
     echo "====> Deleting AWS S3 Bucket"
-    while :; do
+    retries=0
+    while [ $retries -lt 20 ]; do
       aws s3 rb s3://$S3_BUCKET_NAME --force && break
-      sleep 1
+      retries=$((retries+1))
     done
-    echo "====> AWS S3 Bucket $S3_BUCKET_NAME deleted"
+    if [[ $retries -lt 20 ]]; then
+      echo "====> AWS S3 Bucket $S3_BUCKET_NAME deleted"
+    else
+      echo "====> AWS S3 Bucket $S3_BUCKET_NAME is NOT deleted after 20 attempts, please delete manually!!!"
+      exit 1
+    fi
   fi
 }
 
