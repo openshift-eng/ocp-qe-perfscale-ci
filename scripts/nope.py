@@ -25,7 +25,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # directory constants
 ROOT_DIR = str(pathlib.Path(__file__).parent.parent)
 SCRIPT_DIR = ROOT_DIR + "/scripts"
-DATA_DIR = ROOT_DIR + "/data"
+DATA_DIR = "/tmp/data"
 
 # NOPE constants
 THANOS_URL = ""

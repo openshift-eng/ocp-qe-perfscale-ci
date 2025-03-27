@@ -33,7 +33,7 @@ deploy_netobserv() {
     echo "'$INSTALLATION_SOURCE' is not a valid value for INSTALLATION_SOURCE"
     echo "Please set INSTALLATION_SOURCE env variable to either 'Official', 'Internal', 'OperatorHub', or 'Source' if you intend to use the 'deploy_netobserv' function"
     echo "Don't forget to source 'netobserv.sh' again after doing so!"
-    exit 1
+    return 1
   fi
 
   echo "====> Creating openshift-netobserv-operator namespace and OperatorGroup"
@@ -43,9 +43,11 @@ deploy_netobserv() {
   oc apply -n openshift-netobserv-operator -f "$ARTIFACT_DIR"/netobserv-sub.yaml
   sleep 60
   oc wait --timeout=180s --for=condition=ready pod -l app=netobserv-operator -n openshift-netobserv-operator
-  while :; do
+  timeout=0
+  while [ $timeout -lt 300 ]; do
     oc get crd/flowcollectors.flows.netobserv.io && break
-    sleep 1
+    sleep 10
+    timeout=$((timeout+10))
   done
 
   echo "====> Patch CSV so that DOWNSTREAM_DEPLOYMENT is set to 'true'"
@@ -63,9 +65,11 @@ createFlowCollector() {
 
 waitForFlowcollectorReady() {
   echo "====> Waiting for eBPF pods to be ready"
-  while :; do
+  timeout=30
+  while [ $timeout -lt 300 ]; do
     oc get daemonset netobserv-ebpf-agent -n netobserv-privileged && break
-    sleep 1
+    sleep 10
+    timeout=$((timeout+10))
   done
   sleep 60
   oc wait --timeout=1200s --for=condition=ready pod -l app=netobserv-ebpf-agent -n netobserv-privileged
@@ -78,7 +82,7 @@ patch_netobserv() {
   CSV=$(oc get csv -n openshift-netobserv-operator | grep -iE "net.*observ" | awk '{print $1}')
   if [[ -z "$COMPONENT" || -z "$IMAGE" ]]; then
     echo "Specify COMPONENT and IMAGE to be patched to existing CSV deployed"
-    exit 1
+    return 1
   fi
 
   if [[ "$COMPONENT" == "ebpf" ]]; then
@@ -92,14 +96,14 @@ patch_netobserv() {
     PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/2/value\", \"value\": \"$IMAGE\"}]"
   else
     echo "Use component ebpf, flp, plugin, operator as component to patch or to have metrics populated for upstream installation to cluster prometheus"
-    exit 1
+    return 1
   fi
 
   oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p="$PATCH"
 
   if [[ $? != 0 ]]; then
     echo "failed to patch $COMPONENT with $IMAGE"
-    exit 1
+    return 1
   fi
 }
 get_loki_channel() {
@@ -171,9 +175,11 @@ deploy_lokistack() {
   echo "====> Creating S3 secret for Loki"
   $SCRIPTS_DIR/deploy-loki-aws-secret.sh $S3_BUCKET_NAME
   sleep 60
-  while :; do
+  timeout=0
+  while [ $timeout -lt 300 ]; do
     oc wait --timeout=180s --for=condition=ready pod -l app.kubernetes.io/name=loki-operator -n openshift-operators-redhat && break
-    sleep 1
+    sleep 10
+    timeout=$((timeout+30))
   done
 
   echo "====> Determining LokiStack config"
@@ -257,7 +263,7 @@ deploy_kafka() {
   echo "====> Creating kafka-metrics ConfigMap and kafka-resources-metrics PodMonitor"
   oc apply -f "https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/metrics-config.yaml" -n netobserv
   echo "====> Creating kafka-cluster Kafka"
-  oc process -f https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/default.yaml -p DEFAULT_SC="$DEFAULT_SC" -n netobserv | oc apply -n netobserv -f -
+  oc process -f https://raw.githubusercontent.com/netobserv/documents/main/examples/kafka/default-template.yaml -p DEFAULT_SC="$DEFAULT_SC" -n netobserv | oc apply -n netobserv -f -
 
   echo "====> Creating network-flows KafkaTopic"
   if [[ -z $TOPIC_PARTITIONS ]]; then
@@ -287,7 +293,7 @@ delete_s3() {
       echo "====> AWS S3 Bucket $S3_BUCKET_NAME deleted"
     else
       echo "====> AWS S3 Bucket $S3_BUCKET_NAME is NOT deleted after 20 attempts, please delete manually!!!"
-      exit 1
+      return 1
     fi
   fi
 }
