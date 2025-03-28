@@ -36,8 +36,11 @@ setup(){
     export ES_SERVER_URL=${ES_SERVER_URL}
     export ES_SERVER_USER=${ES_SERVER_USER}
     export OCM_TOKEN=${OCM_TOKEN}
+    export OCM_CLIENT_ID=${OCM_CLIENT_ID}
+    export OCM_CLIENT_SECRET=${OCM_CLIENT_SECRET}
     export PROM_TOKEN=${PROM_TOKEN}
     export GATEWAY_URL=${GATEWAY_URL}
+    export BUILD_URL=${BUILD_URL}
 
     # TESTDIR and UUID will be same for ocm-api-load operation. cleanup operation uses different TESTDIR to get unaffected by ocm-api-load operation failures. Cleanup still retrieves UUID and removes /tmp/${UUID} on ORCHESTRATION_HOST
     export TESTDIR=$(uuidgen | head -c8)-$JENKINS_JOB_NUMBER-$(date '+%Y%m%d')
