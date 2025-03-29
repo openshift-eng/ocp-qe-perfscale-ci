@@ -23,7 +23,6 @@ if (userId) {
   currentBuild.displayName = userId
 } 
 
-
 println "user id $userId"
 def RETURNSTATUS = "default"
 def output = ""
@@ -270,11 +269,11 @@ pipeline {
             python3.9 -m virtualenv venv3
             source venv3/bin/activate
             python --version
-                #if (params.udnlayer2 == true ) {
-                 #   ./run.sh --udnl2 |& tee "network-perf-v2.out"
+                #if (params.udnlayer3 == true ) {
+                 #   ./run.sh --udnl3 |& tee "network-perf-v2.out"
                   #   } 
                 if (params.udnlayer2 == true ){
-                    ./run.sh --udnl3 |& tee "network-perf-v2.out"
+                    ./run.sh --udnl2 |& tee "network-perf-v2.out"
                      }
                 else {
                     ./run.sh |& tee "network-perf-v2.out"
