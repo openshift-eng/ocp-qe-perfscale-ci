@@ -78,7 +78,11 @@ pipeline {
           defaultValue: true,
           description: 'Boolean to create network policy to open up the security group rules in your aws deployment'
     )
-
+     booleanParam(
+          name: 'udnlayer2',
+          defaultValue: true,
+          description: 'udn network test'
+    )
     string(
         name: 'EMAIL_ID_OVERRIDE',
         defaultValue: '',
@@ -266,7 +270,15 @@ pipeline {
             python3.9 -m virtualenv venv3
             source venv3/bin/activate
             python --version
-
+                #if (params.udnlayer2 == true ) {
+                 #   ./run.sh --udnl2 |& tee "network-perf-v2.out"
+                  #   } 
+                if (params.udnlayer2 == true ){
+                    ./run.sh --udnl3 |& tee "network-perf-v2.out"
+                     }
+                else {
+                    ./run.sh |& tee "network-perf-v2.out"
+                     }
             export WORKLOAD=$WORKLOAD_TYPE
             set -o pipefail
             ./run.sh |& tee "network-perf-v2.out"
