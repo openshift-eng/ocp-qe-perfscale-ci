@@ -1110,6 +1110,12 @@ def setTemplateParams(){
     return templateParams
 }
 
+def getTimestamp(isodate) {
+    def command="date -d ${isodate} +%s"
+    def timestamp = sh(script: command, returnStdout: true).trim()
+    return timestamp
+}
+
 def captureWorkloadResults(){
     def UUID = ''
     def JENKINS_BUILD = ''
@@ -1128,8 +1134,8 @@ def captureWorkloadResults(){
         copyArtifacts fingerprintArtifacts: true, projectName: env.WORKLOAD_JENKINS_JOB, selector: specific(env.KUBEBURNER_BUILD), target: 'kube-burner-workload-artifacts', flatten: true
 
         kubeburnerWorkloadInfo = readJSON(file: "$WORKSPACE/kube-burner-workload-artifacts/index_data.json")
-        kubeburnerStarttime = kubeburnerWorkloadInfo.startDateUnixTimestamp
-        kubeburnerEndtime = kubeburnerWorkloadInfo.endDateUnixTimestamp
+        kubeburnerStarttime = getTimestamp(kubeburnerWorkloadInfo.startDate)
+        kubeburnerEndtime = getTimestamp(kubeburnerWorkloadInfo.endDate)
         UUID=kubeburnerWorkloadInfo.uuid
         JENKINS_BUILD = "${kubeburnerWorkloadJob.getNumber()}"
     }
@@ -1150,8 +1156,8 @@ def captureWorkloadResults(){
         copyArtifacts fingerprintArtifacts: true, projectName: env.INGRESSPERF_JENKINS_JOB, selector: specific(env.INGRESSPERF_BUILD), target: 'ingressperf-workload-artifacts', flatten: true
 
         ingressperfWorkloadInfo = readJSON(file: "$WORKSPACE/ingressperf-workload-artifacts/index_data.json")
-        ingressperfStarttime = ingressperfWorkloadInfo.startDateUnixTimestamp
-        ingressperfEndtime = ingressperfWorkloadInfo.endDateUnixTimestamp
+        ingressperfStarttime = getTimestamp(ingressperfWorkloadInfo.startDate)
+        ingressperfEndtime = getTimestamp(ingressperfWorkloadInfo.endDate)
         if (params.WORKLOAD == 'ingress-perf'){
             UUID=ingressperfWorkloadInfo.uuid
             JENKINS_BUILD = "${ingressperfWorkloadInfo.getNumber()}"
