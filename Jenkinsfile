@@ -891,7 +891,7 @@ pipeline {
                                         unstable('NOPE baseline fetching failed - run locally with UUIDs to get baseline comparison statistics :(')
                                     }
                                     else {
-                                        baselineInfo = readJSON(file: "$WORKSPACE/ocp-qe-perfscale-ci/data/baseline.json")
+                                        baselineInfo = readJSON(file: "/tmp/data/baseline.json")
                                         baselineInfo.each { env.setProperty(it.key.toUpperCase(), it.value) }
                                     }
                                 }
