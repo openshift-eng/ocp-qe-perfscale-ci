@@ -719,6 +719,9 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO)
         coloredlogs.install(level="INFO", isatty=True)
 
+    es_logger = logging.getLogger("elasticsearch")
+    es_logger.setLevel(logging.WARNING)
+
     # if running in upload mode - immediately load JSON, upload, and exit
     if args.mode == "upload":
         UPLOAD_FILE = args.file
