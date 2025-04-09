@@ -520,14 +520,14 @@ pipeline {
                     // if a 'Source' installation, determine whether to use main image or specific premerge image
                     if (params.INSTALLATION_SOURCE == 'Source') {
                         if (params.OPERATOR_PREMERGE_OVERRIDE != '') {
-                            env.UPSTREAM_IMAGE = "quay.io/netobserv/network-observability-operator-catalog:v0.0.0-${OPERATOR_PREMERGE_OVERRIDE}"
+                            env.UPSTREAM_IMAGE = "quay.io/netobserv/network-observability-operator-catalog:v0.0.0-sha-${OPERATOR_PREMERGE_OVERRIDE}"
                             env.CATALOG_IMAGE=env.UPSTREAM_IMAGE
-                            NOO_BUNDLE_VERSION="v0.0.0-${OPERATOR_PREMERGE_OVERRIDE}"
+                            NOO_BUNDLE_VERSION="v0.0.0-sha-${OPERATOR_PREMERGE_OVERRIDE}"
                         }
                         else {
-                            env.UPSTREAM_IMAGE = "quay.io/netobserv/network-observability-operator-catalog:v0.0.0-main"
+                            env.UPSTREAM_IMAGE = "quay.io/netobserv/network-observability-operator-catalog:v0.0.0-sha-main"
                             env.CATALOG_IMAGE=env.UPSTREAM_IMAGE
-                            NOO_BUNDLE_VERSION="v0.0.0-main"
+                            NOO_BUNDLE_VERSION="v0.0.0-sha-main"
                         }
                         println("Using NOO Bundle version: ${NOO_BUNDLE_VERSION}")
                         currentBuild.description += "NetObserv Bundle Version: <b>${NOO_BUNDLE_VERSION}</b><br/>"

@@ -218,8 +218,8 @@ deploy_downstream_catalogsource() {
 
   echo "====> Determining CatalogSource config"
   if [[ -z $DOWNSTREAM_IMAGE ]]; then
-    echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8 as index image"
-    DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8"
+    echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest as index image"
+    DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest"
   else
     echo "====> Using image $DOWNSTREAM_IMAGE for CatalogSource"
   fi
@@ -236,7 +236,7 @@ deploy_upstream_catalogsource() {
   if [[ -z $UPSTREAM_IMAGE ]]; then
     echo "====> No image config was found - using main"
     echo "====> To set config, set UPSTREAM_IMAGE variable to desired endpoint"
-    export UPSTREAM_IMAGE="quay.io/netobserv/network-observability-operator-catalog:v0.0.0-main"
+    export UPSTREAM_IMAGE="quay.io/netobserv/network-observability-operator-catalog:v0.0.0-sha-main"
   else
     echo "====> Using image $UPSTREAM_IMAGE for CatalogSource"
   fi

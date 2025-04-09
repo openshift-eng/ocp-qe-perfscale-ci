@@ -19,4 +19,4 @@ parameters:
   - name: NAME
     value: netobserv-testing
   - name: CATALOGSOURCE_IMAGE
-    value: quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator/network-observability-operator-fbc:1.8
+    value: quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest
