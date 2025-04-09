@@ -793,7 +793,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'elasticsearch-perfscale-ocp-qe', usernameVariable: 'ES_USERNAME', passwordVariable: 'ES_PASSWORD')]) {
                     script {
                         // construct arguments for NOPE tool and execute
-                        NOPE_ARGS = "--starttime $STARTDATEUNIXTIMESTAMP --endtime $ENDDATEUNIXTIMESTAMP --jenkins-job $WORKLOAD_JENKINS_JOB --jenkins-build $JENKINS_BUILD --uuid ${env.UUID}"
+                        NOPE_ARGS = "--starttime $STARTDATEUNIXTIMESTAMP --endtime $ENDDATEUNIXTIMESTAMP --uuid ${env.UUID}"
                         if ("${NOO_BUNDLE_VERSION}" != 'null'){
                             echo "NOO_BUNDLE_VERSION: ${NOO_BUNDLE_VERSION}"
                             NOPE_ARGS += " --noo-bundle-version ${NOO_BUNDLE_VERSION}"
