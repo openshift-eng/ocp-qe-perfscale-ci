@@ -26,13 +26,10 @@
                     "metric_name"
                 ]
             },
-            "prod-netobserv-jenkins-metadata": {
+            "perf_scale_ci*": {
                 "fields": [
                     "buildUrl",
-                    "jenkins_build_num",
-                    "jenkins_job_name",
-                    "variable",
-                    "workload"
+                    "benchmark"
                 ],
                 "additional_fields": [
                     "metric_name"
