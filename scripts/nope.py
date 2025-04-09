@@ -283,57 +283,6 @@ def get_netobserv_env_info():
     return info
 
 
-def get_jenkins_env_info():
-    """gathers information about Jenkins env
-    if build parameter data cannot be collected, only command line data will be included
-    """
-
-    # intialize info object
-    iso_timestamp = get_iso_timestamp(START_TIME)
-    info = {
-        "uuid": UUID,
-        "metric_name": "jenkinsEnv",
-        "data_type": "metadata",
-        "iso_timestamp": iso_timestamp,
-        "jenkins_job_name": JENKINS_JOB,
-        "jenkins_build_num": JENKINS_BUILD,
-        "buildUrl": JENKINS_BUILD_URL,
-    }
-
-    # collect data from Jenkins server
-    try:
-        build_info = JENKINS_SERVER.get_build_info(JENKINS_JOB, JENKINS_BUILD)
-        logging.debug(f"Jenkins Build Info: {build_info}")
-        build_actions = build_info["actions"]
-        build_parameters = None
-        for action in build_actions:
-            if action.get("_class") == "hudson.model.ParametersAction":
-                build_parameters = action["parameters"]
-                break
-        if build_parameters is None:
-            raise Exception("No build parameters could be found.")
-        for param in build_parameters:
-            del param["_class"]
-            if param.get("name") == "VARIABLE":
-                info["variable"] = int(param.get("value"))
-            if param.get("name") == "WORKLOAD":
-                info["workload"] = str(param.get("value"))
-        # if workload is not explicitly set in Jenkins such as with router-perf, take it from the job name
-        if info.get("workload") is None:
-            info["workload"] = JENKINS_JOB.split("/")[-1]
-        # check if a valid workload has been parsed
-        if info["workload"] not in SUPPORTED_WORKLOADS:
-            raise Exception(
-                f"{info['workload']} is not in the list of supported workloads: {SUPPORTED_WORKLOADS}"
-            )
-
-    except Exception as e:
-        logging.error(f"Failed to collect Jenkins build parameter info: {e}")
-
-    # return all collected data
-    return info
-
-
 def dump_data_locally(timestamp, partial=False):
     """writes captured data in RESULTS dictionary to a JSON file
     file is saved to 'data_{timestamp}.json' in DATA_DIR system path if data is complete
@@ -362,17 +311,10 @@ def format_data_for_upload():
     uuid = None
     payload = []
 
-    if "jenkins_env" in RESULTS:
-        payload.append(RESULTS["jenkins_env"])
-        uuid = RESULTS["jenkins_env"]["uuid"]
     if "netobserv_env" in RESULTS:
         payload.append(RESULTS["netobserv_env"])
-        if uuid is None:
-            uuid = RESULTS["netobserv_env"]["uuid"]
-        else:
-            assert (
-                uuid == RESULTS["netobserv_env"]["uuid"]
-            ), "UUIDs for jenkinsEnv and netobservEnv did not match, data may be malformed"
+        uuid = RESULTS["netobserv_env"]["uuid"]
+
     if "prometheus_data" in RESULTS and len(RESULTS["prometheus_data"]) > 0:
         for item in RESULTS["prometheus_data"]:
             clean_data = process_query(
@@ -400,8 +342,6 @@ def upload_data_to_elasticsearch():
         metric_name = item.get("metric_name")
         if metric_name == "netobservEnv":
             index = "prod-netobserv-operator-metadata"
-        elif metric_name == "jenkinsEnv":
-            index = "prod-netobserv-jenkins-metadata"
         else:
             index = "prod-netobserv-datapoints"
         logging.debug(f"Uploading item '{item}' to index '{index}' in Elasticsearch")
@@ -445,7 +385,7 @@ def upload_baseline_to_elasticsearch(uuid):
 
     # get workload info from Elasticsearch based off UUID
     workloadRes = es.search(
-        index="prod-netobserv-jenkins-metadata",
+        index="perf_scale_ci*",
         body={"query": {"match": {"uuid.keyword": uuid}}},
     )
     logging.debug(f"Response back from workload fetch attempt was {workloadRes}")
@@ -459,10 +399,13 @@ def upload_baseline_to_elasticsearch(uuid):
     # parse out workload info from response object and log
     # if workload is not explicitly set in jenkins data such as with legacy router-perf, take it from the job name
     try:
-        workload = workloadRes["hits"]["hits"][0]["_source"]["workload"]
+        workload = workloadRes["hits"]["hits"][0]["_source"]["benchmark"]
     except KeyError:
-        job_name = workloadRes["hits"]["hits"][0]["_source"]["jenkins_job_name"]
-        workload = job_name.split("/")[-1]
+        logging.error(
+            f"Could not find the field benchmark in ES search results for uuid {uuid} on index perf_scale_ci* {workloadRes}"
+        )
+        sys.exit(1)
+
     logging.info(f"Got {workload} for workload from test results for UUID {uuid}")
 
     # assemble baseline document
@@ -576,10 +519,6 @@ def get_prom_metrics_queries(noo_start_time):
 
 def main():
 
-    # get jenkins env data if applicable
-    if JENKINS_SERVER is not None:
-        RESULTS["jenkins_env"] = get_jenkins_env_info()
-
     # get netobserv env data
     RESULTS["netobserv_env"] = get_netobserv_env_info()
 
@@ -652,12 +591,7 @@ if __name__ == "__main__":
     standard.add_argument(
         "--step", type=str, default="60", help="Step time for range query"
     )
-    standard.add_argument(
-        "--jenkins-job", type=str, help="Jenkins job name to associate with run"
-    )
-    standard.add_argument(
-        "--jenkins-build", type=str, help="Jenkins build number to associate with run"
-    )
+
     standard.add_argument(
         "--uuid",
         type=str,
@@ -784,28 +718,13 @@ if __name__ == "__main__":
         )
         logging.info("Step is:           " + STEP)
 
-    # check if Jenkins arguments are valid and if so set constants
-    raw_jenkins_job = args.jenkins_job
-    raw_jenkins_build = args.jenkins_build
-    if all(v is None for v in [raw_jenkins_job, raw_jenkins_build]):
-        JENKINS_SERVER = None
-    elif any(v is None for v in [raw_jenkins_job, raw_jenkins_build]):
-        logging.error(
-            "JENKINS_JOB and JENKINS_BUILD must all be used together or not at all"
-        )
+    # check connection to jenkins server
+    try:
+        JENKINS_SERVER = jenkins.Jenkins(JENKINS_URL)
+        version = JENKINS_SERVER.get_version()
+    except Exception as e:
+        logging.error("Error connecting to Jenkins server: ", e)
         sys.exit(1)
-    else:
-        JENKINS_JOB = raw_jenkins_job
-        JENKINS_BUILD = int(raw_jenkins_build)
-        logging.info(
-            f"Associating run with Jenkins job {JENKINS_JOB} build number {JENKINS_BUILD}"
-        )
-        try:
-            JENKINS_SERVER = jenkins.Jenkins(JENKINS_URL)
-            version = JENKINS_SERVER.get_version()
-        except Exception as e:
-            logging.error("Error connecting to Jenkins server: ", e)
-            sys.exit(1)
 
     NOO_BUNDLE_VERSION = args.noo_bundle_version
     if not NOO_BUNDLE_VERSION:
