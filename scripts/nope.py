@@ -718,14 +718,6 @@ if __name__ == "__main__":
         )
         logging.info("Step is:           " + STEP)
 
-    # check connection to jenkins server
-    try:
-        JENKINS_SERVER = jenkins.Jenkins(JENKINS_URL)
-        version = JENKINS_SERVER.get_version()
-    except Exception as e:
-        logging.error("Error connecting to Jenkins server: ", e)
-        sys.exit(1)
-
     NOO_BUNDLE_VERSION = args.noo_bundle_version
     if not NOO_BUNDLE_VERSION:
         logging.warn(
