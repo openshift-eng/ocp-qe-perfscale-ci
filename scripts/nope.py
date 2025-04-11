@@ -794,7 +794,7 @@ if __name__ == "__main__":
             "No token could be found - ensure all the Prerequisite steps in the README were followed"
         )
         sys.exit(1)
-    logging.info(f"TOKEN: {TOKEN}")
+    logging.debug(f"TOKEN: {TOKEN}")
 
     # determine if data will be dumped locally or uploaded to Elasticsearch
     DUMP_ONLY = args.dump_only
