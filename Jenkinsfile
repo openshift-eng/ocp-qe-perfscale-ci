@@ -126,6 +126,11 @@ pipeline {
               set -x
 
               SECONDS=0
+              curl -o openshift-qe-workers-infra-workload-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/workers-infra-workload/openshift-qe-workers-infra-workload-commands.sh
+              #Compatible with openshift/release
+              export KUBECONFIG=~/.kube/config
+              export SHARED_DIR=${SHARED_DIR:/tmp/}
+              sed -i '/set -x/d' ./openshift-qe-workers-infra-workload-commands.sh
               ./openshift-qe-workers-infra-workload-commands.sh
               status=$?
               echo "final status $status"
@@ -181,6 +186,11 @@ pipeline {
               env
               set -x
               SECONDS=0
+              curl -o openshift-qe-move-pods-infra-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/move-pods-infra/openshift-qe-move-pods-infra-commands.sh
+              #Compatible with openshift/release
+              export KUBECONFIG=~/.kube/config
+              export SHARED_DIR=${SHARED_DIR:/tmp/}
+              sed -i '/set -x/d' ./openshift-qe-move-pods-infra-commands.sh
               ./openshift-qe-move-pods-infra-commands.sh
               status=$?
               echo "final status $status"
