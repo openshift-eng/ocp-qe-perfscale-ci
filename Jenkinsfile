@@ -30,6 +30,10 @@ pipeline {
         text(name: 'ENV_VARS', defaultValue: '''PLEASE FILL ME''', description:'''<p>
                Enter list of additional Env Vars you need to pass to the script, one pair on each line. <br>
                For OPENSHIFT_PROMETHEUS_STORAGE_CLASS and OPENSHIFT_ALERTMANAGER_STORAGE_CLASS, use `oc get storageclass` to get them on your cluster.<br>
+               The Following ENV variable can be override by <b>SET_ENV_BY_PLATFORM=custom</b><br>
+               If <b>SET_ENV_BY_PLATFORM=custom</b>, the following ENV variables can be configured, below are some examples. <br>
+               If <b>SET_ENV_BY_PLATFORM=custom</b> and the following ENV variables are not configured, will use the same cpu/ram/volumesize with worker nodes.<br>
+               If <b>SET_ENV_BY_PLATFORM</b> is not set to custom, the following ENV variables can not be configured, will use the default settings in the script.<br>
                e.g.<b>for AWS:</b><br>
                <b>AMD/Standard Architecture:</b> <br>
                 OPENSHIFT_INFRA_NODE_INSTANCE_TYPE=m5.12xlarge<br>
@@ -126,6 +130,11 @@ pipeline {
               set -x
 
               SECONDS=0
+              curl -o openshift-qe-workers-infra-workload-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/workers-infra-workload/openshift-qe-workers-infra-workload-commands.sh
+              #Compatible with openshift/release
+              export KUBECONFIG=~/.kube/config
+              export SHARED_DIR=${SHARED_DIR:/tmp/}
+              sed -i '/set -x/d' ./openshift-qe-workers-infra-workload-commands.sh
               ./openshift-qe-workers-infra-workload-commands.sh
               status=$?
               echo "final status $status"
@@ -181,6 +190,11 @@ pipeline {
               env
               set -x
               SECONDS=0
+              curl -o openshift-qe-move-pods-infra-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/move-pods-infra/openshift-qe-move-pods-infra-commands.sh
+              #Compatible with openshift/release
+              export KUBECONFIG=~/.kube/config
+              export SHARED_DIR=${SHARED_DIR:/tmp/}
+              sed -i '/set -x/d' ./openshift-qe-move-pods-infra-commands.sh
               ./openshift-qe-move-pods-infra-commands.sh
               status=$?
               echo "final status $status"
