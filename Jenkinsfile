@@ -30,7 +30,7 @@ pipeline {
         text(name: 'ENV_VARS', defaultValue: '''PLEASE FILL ME''', description:'''<p>
                Enter list of additional Env Vars you need to pass to the script, one pair on each line. <br>
                For OPENSHIFT_PROMETHEUS_STORAGE_CLASS and OPENSHIFT_ALERTMANAGER_STORAGE_CLASS, use `oc get storageclass` to get them on your cluster.<br>
-               The Following ENV variable can be override by SET_ENV_BY_PLATFORM=custom
+               The Following ENV variable can be override by <b>SET_ENV_BY_PLATFORM=custom</b><br>
                If <b>SET_ENV_BY_PLATFORM=custom</b>, the following ENV variables can be configured, below are some examples. <br>
                If <b>SET_ENV_BY_PLATFORM=custom</b> and the following ENV variables are not configured, will use the same cpu/ram/volumesize with worker nodes.<br>
                If <b>SET_ENV_BY_PLATFORM</b> is not set to custom, the following ENV variables can not be configured, will use the default settings in the script.<br>
