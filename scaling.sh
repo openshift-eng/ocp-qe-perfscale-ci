@@ -12,7 +12,7 @@ function waitForReady() {
     while [[ $(oc get nodes --no-headers -l node-role.kubernetes.io/worker  -o wide | grep "CoreOS"| grep -v "NotReady\\|SchedulingDisabled" | grep worker -c) != $1 ]]; do
         log "Following nodes are currently present, waiting for desired count $1 to be met."
         log "Machinesets:"
-        oc get machinesets -A
+        oc get machinesets.m -A
         log "Nodes:"
         oc get nodes --no-headers -l node-role.kubernetes.io/worker | cat -n
         log "Sleeping for 60 seconds"
@@ -23,7 +23,7 @@ function waitForReady() {
                 oc describe node $node
             done
 
-            for machine in $(oc get machines -n openshift-machine-api --no-headers | grep -v "master" | grep -v "Running" | awk '{print $1}'); do
+            for machine in $(oc get machines.m -n openshift-machine-api --no-headers | grep -v "master" | grep -v "Running" | awk '{print $1}'); do
                 oc describe machine $machine -n openshift-machine-api
             done
             echo "error: all $1 nodes didn't become READY in time, failing"
@@ -35,14 +35,14 @@ function waitForReady() {
 }
 
 function scaleMachineSets(){
-    worker_machine_sets=$(oc get --no-headers machinesets -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role!=infra,machine.openshift.io/cluster-api-machine-role!=workload | awk '{print $1}' )
+    worker_machine_sets=$(oc get --no-headers machinesets.m -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role!=infra,machine.openshift.io/cluster-api-machine-role!=workload | awk '{print $1}' )
     scale_num=$(echo $worker_machine_sets | wc -w | xargs)
     scale_size=$(($1/$scale_num))
     first_machine=""
     first_set=false
     set -x
     for machineset in $(echo $worker_machine_sets); do
-        oc scale machinesets -n openshift-machine-api $machineset --replicas $scale_size
+        oc scale machinesets.m -n openshift-machine-api $machineset --replicas $scale_size
         if [[ "$first_set" = false ]]; then
             first_machine=$machineset
             first_set=true
@@ -50,7 +50,7 @@ function scaleMachineSets(){
     done
     if [[ $(($1%$scale_num)) != 0 ]]; then
         echo $first_machine
-        oc scale machinesets -n openshift-machine-api $first_machine --replicas $(($scale_size+$(($1%$scale_num))))
+        oc scale machinesets.m -n openshift-machine-api $first_machine --replicas $(($scale_size+$(($1%$scale_num))))
     fi
 }
 
@@ -58,20 +58,20 @@ function scaleDownMachines() {
     num_to_decrease=$(($1-$2))
     echo "num to decrease $num_to_decrease"
 
-    for machineset in $(oc get --no-headers machinesets -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role!=infra,machine.openshift.io/cluster-api-machine-role!=workload | awk '{print $1}'); do
+    for machineset in $(oc get --no-headers machinesets.m -n openshift-machine-api -l machine.openshift.io/cluster-api-machine-role!=infra,machine.openshift.io/cluster-api-machine-role!=workload | awk '{print $1}'); do
         echo "machine set to edit $machineset"
-        machine_set_num=$(oc get machinesets -n openshift-machine-api $machineset -o jsonpath="{.spec.replicas}")
+        machine_set_num=$(oc get machinesets.m -n openshift-machine-api $machineset -o jsonpath="{.spec.replicas}")
         echo "machine set scale num currently: $machine_set_num"
         if [[ $machine_set_num -eq 0 ]]; then
             echo "continue on after $machineset"
             continue
         fi
         if [[ $machine_set_num -ge $num_to_decrease ]]; then
-            oc scale machinesets -n openshift-machine-api $machineset --replicas $(($machine_set_num-$num_to_decrease))
+            oc scale machinesets.m -n openshift-machine-api $machineset --replicas $(($machine_set_num-$num_to_decrease))
             echo "scaling down this num $(($machine_set_num-$num_to_decrease))"
             break
         else
-            oc scale machinesets -n openshift-machine-api $machineset --replicas 0
+            oc scale machinesets.m -n openshift-machine-api $machineset --replicas 0
             num_to_decrease=$(($num_to_decrease-$machine_set_num))
             echo "reseting num to decrease $num_to_decrease"
         fi
