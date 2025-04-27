@@ -258,7 +258,7 @@ pipeline {
               spec:
                 containers:
                 - name: "jnlp"
-                  image: "images.paas.redhat.com/aos-qe-ci/jenkins-agent-rhel8:cucushift-${JENKINS_AGENT_LABEL}"
+                  image: "images.paas.redhat.com/aos-qe-ci/jenkins-agent-rhel8-cucushift-${JENKINS_AGENT_LABEL}:latest"
                   resources:
                     requests:
                       memory: "8Gi"
