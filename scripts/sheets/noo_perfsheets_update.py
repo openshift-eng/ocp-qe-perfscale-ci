@@ -5,13 +5,18 @@ import logging
 from es_search import ESSearch
 from sheets import Sheets
 from typing import Dict
+import csv
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(module)s:%(lineno)d %(levelname)s %(message)s",
+)
+logger = logging.getLogger("perfsheets")
 
 # cell range for netobserv perf sheet comparison
-SHEET_CELL_RANGE = "A1:G50"
+SHEET_CELL_RANGE = "A1:G1000"
 NETOBSERV_ES_INDEX = "prod-netobserv-operator-metadata"
+EMAIL_TO_SHARE = "openshift-netobserv-team@redhat.com"
 
 
 def get_values_from_es(uuid) -> tuple:
@@ -67,35 +72,30 @@ def create_uuid_replace_map(*uuids) -> Dict[str, tuple]:
     return noo_versions
 
 
-def modify_values(values: list[list], *uuids) -> list[list]:
-    """
-    Create new list of values with uuids to replace with
-    """
-    uuid_replace = create_uuid_replace_map(*uuids)
-    new_values = []
-    emptyCount = 0
-    maxEmptyCells = 0
-    for row in range(len(values)):
-        if row == 0:
-            new_header = []
-            for val in values[row]:
-                if val in uuids and uuid_replace[val]:
-                    new_header.append(uuid_replace[val])
-                else:
-                    new_header.append(val)
-            new_values.append(new_header)
-        else:
-            if values[row][0] == "metric_name":
-                emptyCount += 1
-                if len(values[row]) > maxEmptyCells:
-                    maxEmptyCells = len(values[row])
-                continue
-            new_values.append(values[row])
+def write_comparison(csvfile):
+    sheet_values = []
+    with open(csvfile, "r") as comp_file:
+        csvreader = csv.reader(comp_file)
+        header = next(csvreader)
+        uuids = [header[-2], header[-1]]
+        uuid_replace = create_uuid_replace_map(*uuids)
+        new_header = []
+        for val in header:
+            if val in uuids and uuid_replace[val]:
+                new_header.append(uuid_replace[val])
+            else:
+                new_header.append(val)
+        sheet_values.append(new_header)
+        for row in csvreader:
+            if "metric_name" not in row:
+                sheet_values.append(row)
+    return sheet_values
 
-    # clear other rows with "" for each cell
-    for r in range(emptyCount):
-        new_values.append(["" for i in range(maxEmptyCells)])
-    return new_values
+
+def write_metrics(csvfile):
+    with open(csvfile, "r") as comp_file:
+        csvreader = csv.reader(comp_file)
+        return list(csvreader)
 
 
 def argparser():
@@ -105,33 +105,49 @@ def argparser():
     parser = argparse.ArgumentParser(
         prog="Tool to update NOO Perf tests comparison sheets"
     )
-    parser.add_argument("--sheet-id", type=str, required=True)
-    parser.add_argument(
-        "--uuid1",
-        help="specify first uuid to replace with NOO bundle release",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--uuid2",
-        help="specify second uuid to replace with NOO bundle release",
-        type=str,
-        required=False,
-    )
+
     parser.add_argument(
         "--service-account",
         help="Google service account file",
         required=True,
     )
+    parser.add_argument(
+        "--csv-file",
+        help="Metrics CSV file to generate gsheet",
+        required=True,
+    )
+    parser.add_argument(
+        "--name",
+        help="Spreadsheet name",
+        required=True,
+    )
+    parser.add_argument(
+        "--comparison",
+        action="store_true",
+        help="Define if csv file is a comparison file or metrics sheet",
+    )
+
     return parser.parse_args()
 
 
 def main():
     args = argparser()
-    gsheets = Sheets(args.sheet_id, SHEET_CELL_RANGE, args.service_account)
-    current_values = gsheets.get_values()
-    new_values = modify_values(current_values, args.uuid1, args.uuid2)
-    gsheets.update_values(new_values)
+    gsheets = Sheets(None, SHEET_CELL_RANGE, args.service_account)
+    gsheets.create(args.name)
+    if args.comparison:
+        sheet_data = write_comparison(
+            args.csv_file,
+        )
+    else:
+        sheet_data = write_metrics(
+            args.csv_file,
+        )
+    gsheets.update_values(sheet_data)
+    gsheets.create_permission(EMAIL_TO_SHARE)
+    gsheets.auto_resize_columns()
+    logger.info(
+        f"Successfully wrote to google sheet: https://docs.google.com/spreadsheets/d/{gsheets.sheetid}"
+    )
 
 
 if __name__ == "__main__":
