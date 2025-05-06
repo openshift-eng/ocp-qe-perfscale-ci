@@ -218,8 +218,8 @@ deploy_downstream_catalogsource() {
 
   echo "====> Determining CatalogSource config"
   if [[ -z $DOWNSTREAM_IMAGE ]]; then
-    echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest as index image"
-    DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest"
+    echo "====> No image config was found; quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-ystream:latest as index image"
+    DOWNSTREAM_IMAGE="quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-ystream:latest"
   else
     echo "====> Using image $DOWNSTREAM_IMAGE for CatalogSource"
   fi
