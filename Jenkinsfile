@@ -508,7 +508,7 @@ pipeline {
                             env.CATALOG_IMAGE=env.DOWNSTREAM_IMAGE
                         }
                         else {
-                            env.DOWNSTREAM_IMAGE = "quay.io/redhat-user-workloads/ocp-network-observab-tenant/network-observability-operator-fbc-ystream:latest"
+                            env.DOWNSTREAM_IMAGE = "quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-ystream:latest"
                             env.CATALOG_IMAGE=env.DOWNSTREAM_IMAGE
                         }
                     }
