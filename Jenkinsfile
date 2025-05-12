@@ -137,15 +137,6 @@ pipeline {
             '''
         )
         string(
-            name: 'IIB_OVERRIDE',
-            defaultValue: '',
-            description: '''
-                If using Internal installation, you can specify here a specific internal index image to use in the CatalogSource rathar than using the most recent bundle<br/>
-                These IDs can be found in CVP emails under 'Index Image Location' section<br/>
-                e.g. <b>450360</b>
-            '''
-        )
-        string(
             name: 'OPERATOR_PREMERGE_OVERRIDE',
             defaultValue: '',
             description: '''
@@ -503,14 +494,8 @@ pipeline {
                 script {
                     // if an 'Internal' installation, determine whether to use aosqe-index image or specific IIB image
                     if (params.INSTALLATION_SOURCE == 'Internal') {
-                        if (params.IIB_OVERRIDE != '') {
-                            env.DOWNSTREAM_IMAGE = "brew.registry.redhat.io/rh-osbs/iib:${params.IIB_OVERRIDE}"
-                            env.CATALOG_IMAGE=env.DOWNSTREAM_IMAGE
-                        }
-                        else {
-                            env.DOWNSTREAM_IMAGE = "quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-ystream:latest"
-                            env.CATALOG_IMAGE=env.DOWNSTREAM_IMAGE
-                        }
+                        env.DOWNSTREAM_IMAGE = "quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-ystream:latest"
+                        env.CATALOG_IMAGE=env.DOWNSTREAM_IMAGE
                     }
 
                     if (params.INSTALLATION_SOURCE == 'Official') {
