@@ -35,12 +35,6 @@ objects:
           limits:
             memory: ${FLPMemoryLimit}
         advanced:
-          secondaryNetworks:
-            - index:
-                - MAC
-                - Interface
-                - IP
-              name: ovn-kubernetes
         kafkaConsumerReplicas: ${{KafkaConsumerReplicas}}
       kafka:
         address: kafka-cluster-kafka-bootstrap.netobserv
