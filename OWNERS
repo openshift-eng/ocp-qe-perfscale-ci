@@ -1,7 +1,7 @@
 approvers:
-- mffiedler
 - qiliRedHat
-- paigerube14
+- skordas
+- rpattath
 reviewers:
 - jogeo
 - nathan-weinberg
@@ -11,3 +11,7 @@ reviewers:
 - rpattath
 - skordas
 - memodi
+- liqcui
+- mehabhalodiya
+- SachinNinganure
+- shahsahil264
