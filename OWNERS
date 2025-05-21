@@ -1,12 +1,21 @@
 approvers:
-- mffiedler
-- memodi
-- paigerube14
 - Amoghrd
+- memodi
+- mffiedler
+- qiliRedHat
+- rpattath
+- skordas
 reviewers:
+- liqcui
+- mehabhalodiya
 - mffiedler
 - memodi
 - paigerube14
 - Amoghrd
 - jotak
 - jpinsonneau
+- qiliRedHat
+- rpattath
+- SachinNinganure
+- shahsahil264
+- skordas
