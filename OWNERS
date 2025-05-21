@@ -1,12 +1,17 @@
 approvers:
-- mffiedler
 - qiliRedHat
 - chentex
+- skordas
+- rpattath
 reviewers:
+- liqcui
 - qiliRedHat
+- mehabhalodiya
 - mffiedler
 - paigerube14
 - rpattath
+- SachinNinganure
+- shahsahil264
 - skordas
 - memodi
 - chentex
