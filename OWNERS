@@ -1,13 +1,16 @@
 approvers:
-- mffiedler
 - qiliRedHat
-- paigerube14
-- svetsa-rh
+- skordas
+- rpattath
 reviewers:
 - qiliRedHat
+- liqcui
 - mffiedler
+- mehabhalodiya
 - paigerube14
 - rpattath
+- SachinNinganure
+- shahsahil264
 - skordas
 - memodi
 - svetsa-rh
