@@ -1,14 +1,17 @@
 approvers:
-- mffiedler
 - qiliRedHat
-- paigerube14
-- nathan-weinberg
+- skordas
+- rpattath
 reviewers:
 - jechen0648
 - qiliRedHat
+- liqcui
+- mehabhalodiya
 - mffiedler
 - paigerube14
 - rpattath
+- SachinNinganure
+- shahsahil264
 - skordas
 - memodi
 - nathan-weinberg
