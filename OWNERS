@@ -1,6 +1,7 @@
 approvers:
-- mffiedler
 - qiliRedHat
+- skordas
+- rpattath
 reviewers:
 - qiliRedHat
 - mffiedler
@@ -9,3 +10,7 @@ reviewers:
 - skordas
 - memodi
 - nathan-weinberg
+- liqcui
+- mehabhalodiya
+- SachinNinganure
+- shahsahil264
