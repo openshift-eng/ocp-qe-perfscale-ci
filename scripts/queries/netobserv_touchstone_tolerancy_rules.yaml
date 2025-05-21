@@ -24,6 +24,9 @@
   tolerancy: -10
   max_failures: 0
 # CPU totals
+- json_path: ["metric_name", "cpuOperatorTotals", "metric_name", "*", "avg(value)"]
+  tolerancy: 60
+  max_failures: 0
 - json_path: ["metric_name", "cpuFLPTotals", "metric_name", "*", "avg(value)"]
   tolerancy: 10
   max_failures: 0
@@ -40,6 +43,9 @@
   tolerancy: 60
   max_failures: 0
 # RSS totals
+- json_path: ["metric_name", "rssOperatorTotals", "metric_name", "*", "avg(value)"]
+  tolerancy: 10
+  max_failures: 0
 - json_path: ["metric_name", "rssFLPTotals", "metric_name", "*", "avg(value)"]
   tolerancy: 10
   max_failures: 0
