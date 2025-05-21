@@ -1,10 +1,15 @@
 approvers:
-- mffiedler
 - qiliRedHat
+- rpattath
+- skordas
 reviewers:
+- liqcui
 - qiliRedHat
+- mehabhalodiya
 - mffiedler
 - paigerube14
 - rpattath
+- SachinNinganure
+- shahsahil264
 - skordas
 - memodi
