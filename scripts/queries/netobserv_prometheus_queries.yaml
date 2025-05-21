@@ -125,6 +125,22 @@
 - query: sum(container_memory_working_set_bytes{namespace="netobserv", container="", pod=~"flowlogs.*"})
   metricName: workingsetFLPTotals
 
+####################
+# Operator metrics #
+####################
+
+# total CPU usage by operator - per pod is not included here as that is collected above
+- query: sum(pod:container_cpu_usage:sum{namespace="netobserv", pod=~"netobserv-controller-manager.*"})
+  metricName: cpuOperatorTotals
+
+# total RSS by operator - per pod is not included here as that is collected above
+- query: sum(container_memory_rss{namespace="netobserv", container="", pod=~"netobserv-controller-manager.*"})
+  metricName: rssOperatorTotals
+
+# total working set memory by operator - per pod is not included here as that is collected above
+- query: sum(container_memory_working_set_bytes{namespace="netobserv", container="", pod=~"netobserv-controller-manager.*"})
+  metricName: workingsetOperatorTotals
+
 ################
 # Loki metrics #
 ################
