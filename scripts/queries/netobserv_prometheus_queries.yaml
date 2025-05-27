@@ -130,7 +130,7 @@
 ####################
 
 # total CPU usage by operator - per pod is not included here as that is collected above
-- query: sum(pod:container_cpu_usage:sum{namespace="netobserv", pod=~"netobserv-controller-manager.*"})
+- query: sum(pod:container_cpu_usage:sum{namespace="openshift-netobserv-operator", pod=~"netobserv-controller-manager.*"})
   metricName: cpuOperatorTotals
 
 # total RSS by operator - per pod is not included here as that is collected above
