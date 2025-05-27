@@ -1,0 +1,94 @@
+# Default values for rapidast-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: $DAST_IMAGE
+  pullPolicy: Always
+  tag: "$DAST_IMAGE_TAG"
+
+job:
+  cron: false
+  schedule: "0 22 * * *"  # used when job.cron is true, e.g. at 10pm daily
+
+secContext: '{ "privileged": true }'
+resources: {}
+  #  limits:
+  #      cpu: 400m
+  #      memory: 1Gi
+  #  requests:
+  #      cpu: 200m
+  #      memory: 500Mi
+  # It is recommended not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  
+
+pvc: rapidast-pvc
+
+# config is (currently) same as config file -- must be multiline string
+rapidastConfig: |
+    config:
+        # WARNING: `configVersion` indicates the schema version of the config file.
+        # This value tells RapiDAST what schema should be used to read this configuration.
+        # Therefore you should only change it if you update the configuration to a newer schema
+        # It is intended to keep backward compatibility (newer RapiDAST running an older config)
+        configVersion: 5
+        base_results_dir: "/opt/rapidast/results"
+
+    # `application` contains data related to the application, not to the scans.
+    application:
+        shortName: "MyApp-1.0"
+        url: "$BASE_API_URL"
+
+    # `general` is a section that will be applied to all scanners.
+    general:
+
+        #authentication:
+        #    type: "cookie"
+        #    parameters:
+        #        name: "openshift-session-token"
+        #        value: "$TOKEN"  # referring to a env defined in general.environ.envFile
+
+        authentication:
+            type: "http_header"
+            parameters:
+                name: "Authorization"
+                value: "Bearer $TOKEN"
+
+        container:
+            # currently supported: `podman` and `none`
+            type: "none"
+        
+    scanners:
+        zap:
+        # define a scan through the ZAP scanner
+            apiScan:
+                apis:
+                    apiUrl: "$API_URL"
+
+            results: "*stdout"
+
+            passiveScan:
+                # optional list of passive rules to disable
+                disabledRules: "2,10015,10027,10096,10024"
+            
+            miscOptions:
+                enableUI: False
+                updateAddons: False
+                memMaxHeap: "6144m"
+
+            activeScan:
+                # If no policy is chosen, a default ("API-scan-minimal") will be selected
+                # The list of policies can be found in scanners/zap/policies/
+                policy: "$POLICY_FILE"
+
+            report:
+                format: ["json", "html"]
+                # format: ["json","html","sarif","xml"]  # default: "json" only
+
+            overrideConfigs:
+              # to set the value 'default' for {namespace} in the API path
+              - formhandler.fields.field(0).fieldId=namespace  
+              - formhandler.fields.field(0).value=$NAMESPACE
