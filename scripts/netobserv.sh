@@ -52,7 +52,7 @@ deploy_netobserv() {
 
   echo "====> Patch CSV so that DOWNSTREAM_DEPLOYMENT is set to 'true'"
   CSV=$(oc get csv -n openshift-netobserv-operator | egrep -i "net.*observ" | awk '{print $1}')
-  oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/3/value", "value": 'true'}]"
+  oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/4/value", "value": 'true'}]"
 }
 
 createFlowCollector() {
