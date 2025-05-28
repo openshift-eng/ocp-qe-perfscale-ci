@@ -134,11 +134,11 @@
   metricName: cpuOperatorTotals
 
 # total RSS by operator - per pod is not included here as that is collected above
-- query: sum(container_memory_rss{namespace="netobserv", container="", pod=~"netobserv-controller-manager.*"})
+- query: sum(container_memory_rss{namespace="openshift-netobserv-operator", container="", pod=~"netobserv-controller-manager.*"})
   metricName: rssOperatorTotals
 
 # total working set memory by operator - per pod is not included here as that is collected above
-- query: sum(container_memory_working_set_bytes{namespace="netobserv", container="", pod=~"netobserv-controller-manager.*"})
+- query: sum(container_memory_working_set_bytes{namespace="openshift-netobserv-operator", container="", pod=~"netobserv-controller-manager.*"})
   metricName: workingsetOperatorTotals
 
 ################
