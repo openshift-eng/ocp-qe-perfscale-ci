@@ -15,8 +15,18 @@ fi
 
 RELEASE=$(oc get pods -l app=netobserv-operator -o jsonpath="{.items[*].spec.containers[0].env[?(@.name=='OPERATOR_CONDITION_NAME')].value}" -A | cut -d 'v' -f 3)
 
-QUAY_REPO_URL="quay.io/redhat-user-workloads/ocp-network-observab-tenant/netobserv-operator"
+if [[ -n $DOWNSTREAM_IMAGE ]]; then
+    CATALOG_IMAGE=$DOWNSTREAM_IMAGE
+else
+    echo "===> Set DOWNSTREAM_IMAGE env var to the catalog source image used for netobserv-operator"
+    exit 1
+fi
+
 BUNDLE_IMAGE=$($OPM_BIN alpha list bundles "$CATALOG_IMAGE" netobserv-operator | grep "$RELEASE" | awk '{print $5}')
-bundle_tag=$(echo "$BUNDLE_IMAGE" | awk -F':' '{print $NF}')
-CREATED_DATE=$(oc image info $QUAY_REPO_URL/network-observability-operator-bundle@sha256:"$bundle_tag" -o json --filter-by-os linux/amd64 | jq '.config.created' | sed 's/"//g')
+bundle_tag=$(oc image info $BUNDLE_IMAGE -o json --filter-by-os linux/amd64 | jq '.config.config.Labels["vcs-ref"]')
+CREATED_DATE=$(oc image info $BUNDLE_IMAGE -o json --filter-by-os linux/amd64 | jq '.config.created')
+bundle_tag=${bundle_tag//\"/}
+# remove quotes and milliseconds from created date
+CREATED_DATE=${CREATED_DATE//\"/}
+CREATED_DATE=${CREATED_DATE//\./}
 echo "$RELEASE-$CREATED_DATE-$bundle_tag"
