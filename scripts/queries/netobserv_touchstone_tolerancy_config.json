@@ -194,6 +194,19 @@
             },
             {
                 "filter": {
+                    "metric_name.keyword": "cpuOperatorTotals"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
+                    ]
+                }
+            },
+            {
+                "filter": {
                     "metric_name.keyword": "cpuFLPTotals"
                 },
                 "buckets": [
@@ -247,6 +260,19 @@
             {
                 "filter": {
                     "metric_name.keyword": "cpuPrometheusTotals"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
+                    ]
+                }
+            },
+            {
+                "filter": {
+                    "metric_name.keyword": "rssOperatorTotals"
                 },
                 "buckets": [
                     "metric_name.keyword"
