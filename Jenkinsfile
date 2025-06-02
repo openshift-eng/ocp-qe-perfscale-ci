@@ -228,6 +228,15 @@ pipeline {
               fi
               export folder=${SCRIPT%/*}
               export script=${SCRIPT##*/} 
+              // Validate directory existence before changing to it
+                if [[ ! -d "${folder}" ]]; then
+                echo "Error: Directory ${folder} does not exist in the workspace."
+                echo "Workspace contents:"
+                ls -R $WORKSPACE
+                exit 1
+                fi
+
+                // Change to the directory
               cd ${folder}
 
               chmod +x ${script}
