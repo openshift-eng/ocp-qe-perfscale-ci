@@ -216,19 +216,22 @@ pipeline {
               python3.9 -m virtualenv venv3
               source venv3/bin/activate
               python --version
-              # If SCRIPT is not specified, find the script by the TEST_CASE.
-              if [[ $SCRIPT == "" ]]
-              then
+                python --version
+                # If SCRIPT is not specified, find the script by the TEST_CASE.
+                if [[ $SCRIPT == "" ]]
+                then
                 SCRIPT=$(find perfscale_regression_ci -name $TEST_CASE.sh)
                 if [[ $SCRIPT == "" ]]
                 then
-                  echo "$TEST_CASE.sh is not found under svt repo perfscale_regression_ci/scripts folder. Please check."
-                  exit 1
+                    echo "$TEST_CASE.sh is not found under svt repo perfscale_regression_ci/scripts folder. Please check."
+                    exit 1
                 fi
-              fi
-              export folder=${SCRIPT%/*}
-              export script=${SCRIPT##*/} 
-              // Validate directory existence before changing to it
+                fi
+
+                export folder=${SCRIPT%/*}
+                export script=${SCRIPT##*/}
+
+                # Validate directory existence before changing to it
                 if [[ ! -d "${folder}" ]]; then
                 echo "Error: Directory ${folder} does not exist in the workspace."
                 echo "Workspace contents:"
@@ -236,8 +239,8 @@ pipeline {
                 exit 1
                 fi
 
-                // Change to the directory
-              cd ${folder}
+                # Change to the directory
+                cd ${folder}
 
               chmod +x ${script}
               set -o pipefail
