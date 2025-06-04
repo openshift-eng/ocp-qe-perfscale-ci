@@ -26,6 +26,7 @@ objects:
           - NetworkEvents
           - PacketTranslation
           - UDNMapping
+          - IPSec
           flowFilter:
             action: Accept
             cidr: 0.0.0.0/0

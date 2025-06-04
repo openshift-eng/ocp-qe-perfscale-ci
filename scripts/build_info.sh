@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 # check whether it's running on jenkins or prow
 if [[ -n $JENKINS_HOME ]]; then
     # when running on jenkins
