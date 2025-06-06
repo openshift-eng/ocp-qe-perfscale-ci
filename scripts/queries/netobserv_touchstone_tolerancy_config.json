@@ -350,6 +350,19 @@
             },
             {
                 "filter": {
+                    "metric_name.keyword": "metricsCardinality"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
+                    ]
+                }
+            },
+            {
+                "filter": {
                     "metric_name.keyword": "TotalNetObservCPUUsage"
                 },
                 "buckets": [
