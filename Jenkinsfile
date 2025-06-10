@@ -236,11 +236,11 @@ pipeline {
                   image: "images.paas.redhat.com/aos-qe-ci/jenkins-agent-rhel8-cucushift-${JENKINS_AGENT_LABEL}:latest"
                   resources:
                     requests:
-                      memory: "8Gi"
-                      cpu: "2"
+                      memory: "600Mi"
+                      cpu: "100m"
                     limits:
-                      memory: "8Gi"
-                      cpu: "2"
+                      memory: "4Gi"
+                      cpu: "1"
                   imagePullPolicy: Always
                   workingDir: "/home/jenkins/ws"
                   tty: true
