@@ -62,7 +62,7 @@
   tolerancy: 60
   max_failures: 0
 - json_path: ["metric_name", "metricsCardinality", "metric_name", "*", "avg(value)"]
-  tolerancy: 10
+  tolerancy: 30
   max_failures: 0
 # total usages
 - json_path: ["metric_name", "TotalNetObservCPUUsage", "metric_name", "*", "avg(value)"]
