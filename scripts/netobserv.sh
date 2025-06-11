@@ -42,6 +42,19 @@ deploy_netobserv() {
   oc process --ignore-unknown-parameters=true -f "$SCRIPTS_DIR"/netobserv/netobserv-subscription.yaml -p NETOBSERV_CHANNEL=$NETOBSERV_CHANNEL NETOBSERV_SOURCE=$NETOBSERV_SOURCE -n default -o yaml >"$ARTIFACT_DIR"/netobserv-sub.yaml
   oc apply -n openshift-netobserv-operator -f "$ARTIFACT_DIR"/netobserv-sub.yaml
   sleep 60
+  timeout=0
+  # with downstream images it can take a while for mirrored images to get pulled
+  # and in large clusters it can be stuck in ImagePullError
+  # deleting the pod to force recreation helps.
+  while [ $timeout -lt 300 ]; do
+    oc get pod -l app=netobserv-operator -n openshift-netobserv-operator | grep Running && break
+    oc get pod -l app=netobserv-operator -n openshift-netobserv-operator
+    echo "====> Deleting the Operator pod "
+    oc delete pod -l app=netobserv-operator -n openshift-netobserv-operator
+    sleep 10
+    timeout=$((timeout+10))
+  done
+
   oc wait --timeout=180s --for=condition=ready pod -l app=netobserv-operator -n openshift-netobserv-operator
   timeout=0
   while [ $timeout -lt 300 ]; do
@@ -49,7 +62,9 @@ deploy_netobserv() {
     sleep 10
     timeout=$((timeout+10))
   done
-
+  # when using Internal builds, patch csv with images
+  # of same sha256 of quay.io instead registry.redhat.io
+  patch_unreleased_images
   echo "====> Patch CSV so that DOWNSTREAM_DEPLOYMENT is set to 'true'"
   CSV=$(oc get csv -n openshift-netobserv-operator | egrep -i "net.*observ" | awk '{print $1}')
   oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/4/value", "value": 'true'}]"
@@ -94,6 +109,8 @@ patch_netobserv() {
   elif [[ "$COMPONENT" == "plugin" ]]; then
     echo "====> Patching Plugin image"
     PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/2/value\", \"value\": \"$IMAGE\"}]"
+  elif [[ "$COMPONENT" == "operator" ]]; then
+    PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/image\", \"value\": \"$IMAGE\"}]"
   else
     echo "Use component ebpf, flp, plugin, operator as component to patch or to have metrics populated for upstream installation to cluster prometheus"
     return 1
@@ -106,6 +123,32 @@ patch_netobserv() {
     return 1
   fi
 }
+
+patch_unreleased_images(){
+  if [[ $INSTALLATION_SOURCE == "Internal" ]]; then
+    QUAY_URL="quay.io/redhat-user-workloads/ocp-network-observab-tenant"
+
+    # capture stream from quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-zstream:latest
+    STREAM=${DOWNSTREAM_IMAGE%%:*}
+    STREAM=${STREAM##*-}
+  
+    # capture sha256 of images
+    RELATED_IMAGE_EBPF_AGENT=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_EBPF_AGENT")].value}')
+    RELATED_IMAGE_EBPF_AGENT=${RELATED_IMAGE_EBPF_AGENT#*@}
+    RELATED_IMAGE_FLOWLOGS_PIPELINE=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
+    RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_FLOWLOGS_PIPELINE#*@}
+    RELATED_IMAGE_CONSOLE_PLUGIN=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
+    RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_CONSOLE_PLUGIN#*@}
+    RELATED_IMAGE_OPERATOR=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].image}')
+    RELATED_IMAGE_OPERATOR=${RELATED_IMAGE_OPERATOR#*@}
+    
+    patch_netobserv "ebpf" "$QUAY_URL/netobserv-ebpf-agent-$STREAM@$RELATED_IMAGE_EBPF_AGENT"
+    patch_netobserv "flp" "$QUAY_URL/flowlogs-pipeline-$STREAM@$RELATED_IMAGE_FLOWLOGS_PIPELINE"
+    patch_netobserv "plugin" "$QUAY_URL/network-observability-console-plugin-$STREAM@$RELATED_IMAGE_CONSOLE_PLUGIN"
+    patch_netobserv "operator" "$QUAY_URL/network-observability-operator-$STREAM@$RELATED_IMAGE_OPERATOR"
+  fi
+}
+
 get_loki_channel() {
   catalog_label=$1
   channels=$(oc get packagemanifests -l catalog="$catalog_label" -n openshift-marketplace -o jsonpath='{.items[?(@.metadata.name=="loki-operator")].status.channels[*].name}')
