@@ -139,7 +139,7 @@ patch_unreleased_images(){
     RELATED_IMAGE_FLOWLOGS_PIPELINE=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
     RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_FLOWLOGS_PIPELINE#*@}
     RELATED_IMAGE_CONSOLE_PLUGIN=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_CONSOLE_PLUGIN")].value}')
-    RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_CONSOLE_PLUGIN#*@}
+    RELATED_IMAGE_CONSOLE_PLUGIN=${RELATED_IMAGE_CONSOLE_PLUGIN#*@}
     RELATED_IMAGE_OPERATOR=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].image}')
     RELATED_IMAGE_OPERATOR=${RELATED_IMAGE_OPERATOR#*@}
     
