@@ -131,15 +131,16 @@ patch_unreleased_images(){
     # capture stream from quay.io/redhat-user-workloads/ocp-network-observab-tenant/catalog-zstream:latest
     STREAM=${DOWNSTREAM_IMAGE%%:*}
     STREAM=${STREAM##*-}
-  
+    CSV=$(oc get csv -n openshift-netobserv-operator | grep -iE "net.*observ" | awk '{print $1}')
+
     # capture sha256 of images
-    RELATED_IMAGE_EBPF_AGENT=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_EBPF_AGENT")].value}')
+    RELATED_IMAGE_EBPF_AGENT=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_EBPF_AGENT")].value}')
     RELATED_IMAGE_EBPF_AGENT=${RELATED_IMAGE_EBPF_AGENT#*@}
-    RELATED_IMAGE_FLOWLOGS_PIPELINE=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
+    RELATED_IMAGE_FLOWLOGS_PIPELINE=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
     RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_FLOWLOGS_PIPELINE#*@}
-    RELATED_IMAGE_CONSOLE_PLUGIN=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
+    RELATED_IMAGE_CONSOLE_PLUGIN=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].env[?(@.name=="RELATED_IMAGE_FLOWLOGS_PIPELINE")].value}')
     RELATED_IMAGE_FLOWLOGS_PIPELINE=${RELATED_IMAGE_CONSOLE_PLUGIN#*@}
-    RELATED_IMAGE_OPERATOR=$(oc -n openshift-netobserv-operator get csv/network-observability-operator.v1.9.0 -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].image}')
+    RELATED_IMAGE_OPERATOR=$(oc -n openshift-netobserv-operator get csv/$CSV -o jsonpath='{.spec.install.spec.deployments[0].spec.template.spec.containers[0].image}')
     RELATED_IMAGE_OPERATOR=${RELATED_IMAGE_OPERATOR#*@}
     
     patch_netobserv "ebpf" "$QUAY_URL/netobserv-ebpf-agent-$STREAM@$RELATED_IMAGE_EBPF_AGENT"
