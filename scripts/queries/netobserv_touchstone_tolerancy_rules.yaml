@@ -2,6 +2,9 @@
 - json_path: ["metric_name", "nFlowsProcessedTotals", "metric_name", "*", "max(value)"]
   tolerancy: -10
   max_failures: 0
+- json_path: ["metric_name", "nFlowsProcessedPerMinuteTotals", "metric_name", "*", "avg(value)"]
+  tolerancy: -10
+  max_failures: 0
 - json_path: ["metric_name", "nWorkloadFlowsProcessedTotals", "metric_name", "*", "max(value)"]
   tolerancy: -10
   max_failures: 0
@@ -18,9 +21,6 @@
   tolerancy: 5
   max_failures: 0
 - json_path: ["metric_name", "nWorkloadBytesProcessedPerMinuteNetobserv", "metric_name", "*", "avg(value)"]
-  tolerancy: -10
-  max_failures: 0
-- json_path: ["metric_name", "nWorkloadBytesProcessedPerMinuteCadvisor", "metric_name", "*", "avg(value)"]
   tolerancy: -10
   max_failures: 0
 # CPU totals

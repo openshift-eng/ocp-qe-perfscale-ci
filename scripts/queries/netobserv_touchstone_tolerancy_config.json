@@ -51,6 +51,19 @@
             },
             {
                 "filter": {
+                    "metric_name.keyword": "nFlowsProcessedPerMinuteTotals"
+                },
+                "buckets": [
+                    "metric_name.keyword"
+                ],
+                "aggregations": {
+                    "value": [
+                        "avg"
+                    ]
+                }
+            },
+            {
+                "filter": {
                     "metric_name.keyword": "nWorkloadFlowsProcessedTotals"
                 },
                 "buckets": [
@@ -65,19 +78,6 @@
             {
                 "filter": {
                     "metric_name.keyword": "nWorkloadBytesProcessedPerMinuteNetobserv"
-                },
-                "buckets": [
-                    "metric_name.keyword"
-                ],
-                "aggregations": {
-                    "value": [
-                        "avg"
-                    ]
-                }
-            },
-            {
-                "filter": {
-                    "metric_name.keyword": "nWorkloadBytesProcessedPerMinuteCadvisor"
                 },
                 "buckets": [
                     "metric_name.keyword"
