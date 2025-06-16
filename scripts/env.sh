@@ -1,4 +1,4 @@
-# use upstream version for perf and reliability testing
+# use downstream version by default
 export INSTALLATION_SOURCE=Internal
 # will use 'Released' if not set otherwise
 export LOKI_OPERATOR=Released
