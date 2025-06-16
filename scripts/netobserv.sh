@@ -89,8 +89,8 @@ waitForFlowcollectorReady() {
   sleep 60
   timeout=0
   while [ $timeout -lt 3600 ]; do
-    agentsDesired=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.items[*].status.desiredNumberSchedule}')
-    agentsReady=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.items[*].status.numberReady}')
+    agentsDesired=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.status.desiredNumberScheduled}')
+    agentsReady=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.status.numberReady}')
     [[ $agentsDesired -eq "$agentsReady" ]] && break
     sleep 30
     timeout=$((timeout+30))
