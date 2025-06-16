@@ -87,7 +87,15 @@ waitForFlowcollectorReady() {
     timeout=$((timeout+10))
   done
   sleep 60
-  oc wait --timeout=1200s --for=condition=ready pod -l app=netobserv-ebpf-agent -n netobserv-privileged
+  timeout=0
+  while [ $timeout -lt 3600 ]; do
+    agentsDesired=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.status.desiredNumberScheduled}')
+    agentsReady=$(oc get daemonset netobserv-ebpf-agent -n netobserv-privileged -o jsonpath='{.status.numberReady}')
+    [[ $agentsDesired -eq "$agentsReady" ]] && break
+    sleep 30
+    timeout=$((timeout+30))
+    echo "====> ebpf agents are not ready after $timeout, checking again..."
+  done
   oc wait --timeout=1200s --for=condition=ready flowcollector cluster
 }
 
