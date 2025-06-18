@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger("perfsheets")
 
 # cell range for netobserv perf sheet comparison
-SHEET_CELL_RANGE = "A1:G1000"
+SHEET_CELL_RANGE = "A1:G2000"
 NETOBSERV_ES_INDEX = "prod-netobserv-operator-metadata"
 EMAIL_TO_SHARE = "openshift-netobserv-team@redhat.com"
 
