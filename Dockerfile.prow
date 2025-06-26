@@ -5,3 +5,5 @@ COPY scripts scripts
 ENV HOME=/home/user
 RUN mkdir -p /home/user && curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip" && unzip awscli-bundle.zip && awscli-bundle/install -b $HOME/bin/aws
 ENV PATH="$PATH:$HOME/bin"
+ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 $HOME/bin/yq
+RUN chmod +x $HOME/bin/yq
