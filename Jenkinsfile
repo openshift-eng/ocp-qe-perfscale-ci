@@ -109,7 +109,7 @@ pipeline {
     )
     string(
         name:'JENKINS_AGENT_LABEL',
-        defaultValue:'oc412',
+        defaultValue:'oc420',
         description:''
     )
     text(
