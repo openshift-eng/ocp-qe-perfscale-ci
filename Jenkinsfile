@@ -8,12 +8,12 @@ pipeline {
         string(name: 'BUILD_NUMBER', defaultValue: '', description: 'Build number of job that has installed the cluster.')
         string(name: 'IMAGE_STREAM', defaultValue: 'openshift/must-gather', description: 'Base image stream of data to gather for the must-gather.')
         string(name: 'IMAGE', defaultValue: '', description: 'Optional image to help get must-gather information on non default areas. See <a href="https://docs.openshift.com/container-platform/4.12/support/gathering-cluster-data.html">docs</a> for more information and options.')
-        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc418',description:
+        string(name:'JENKINS_AGENT_LABEL',defaultValue:'oc420',description:
         '''
         scale-ci-static: for static agent that is specific to scale-ci, useful when the jenkins dynamic agent isn't stable
         <br>
         4.y: oc4y || mac-installer || rhel8-installer-4y <br/>
-            e.g, for 4.8, use oc48 || mac-installer || rhel8-installer-48 <br/>
+            e.g, for 4.20, use oc420 || mac-installer || rhel8-installer-420 <br/>
         3.11: ansible-2.6 <br/>
         3.9~3.10: ansible-2.4 <br/>
         3.4~3.7: ansible-2.4-extra || ansible-2.3 <br/>
