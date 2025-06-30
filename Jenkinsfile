@@ -32,7 +32,7 @@ pipeline {
         )
         string(
             name: 'JENKINS_AGENT_LABEL',
-            defaultValue: 'oc414',
+            defaultValue: 'oc420',
             description: 'Label of Jenkins agent to execute job'
         )
         // Pre-workload cluster configuration
