@@ -1,0 +1,256 @@
+tests:
+  - name: netobserv-perf-node-density-heavy-{{ platform }}-{{ workers }}w
+    index: perf_scale_ci*
+    benchmarkIndex: prod-netobserv-datapoints*
+    metadata:
+      benchmark.keyword: cluster-density-v2
+      platform: {{ platform }}
+      buildUrl: {{ buildurl }}
+      workerNodesCount: {{ workers }}
+      ocpVersion: {{ version }}
+      jobType: periodic
+    metrics:
+      - name: nFlowsProcessedTotals
+        metric_name: nFlowsProcessedTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flow_count
+          agg_type: max
+        # fail if 10% flows processed in either direction
+        direction: 0
+        threshold: 10
+      - name: nFlowsProcessedPerMinuteTotals
+        metric_name: nFlowsProcessedTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flow_per_min_count
+          agg_type: max
+        direction: 0
+        threshold: 10
+      - name: nWorkloadFlowsProcessedTotals
+        metric_name: nWorkloadFlowsProcessedTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: workload_flows_count
+          agg_type: max
+        direction: 0
+        threshold: 10
+      - name: nWorkloadBytesProcessedPerMinuteNetobserv
+        metric_name: nWorkloadBytesProcessedPerMinuteNetobserv
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: workload_flows_per_min_count
+          agg_type: avg
+        direction: 0
+        threshold: 10
+      - name: nFlowsErroredRatio
+        metric_name: nFlowsErroredRatio
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flow_error_ratio
+          agg_type: avg
+        direction: 1
+        threshold: 5
+      - name: lokiRecordsWritten
+        metric_name: lokiRecordsWritten
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: loki_records
+          agg_type: max
+        direction: 0
+        threshold: 10
+      - name: ebpfFlowsDroppedRatio
+        metric_name: ebpfFlowsDroppedRatio
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: ebpf_flows_drop_ratio
+          agg_type: avg
+        direction: 1
+        threshold: 5
+      - name: ebpfRingBufferMapRatioTotals
+        metric_name: ebpfRingBufferMapRatioTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: ebpf_ring_buffer_map_ratio
+          agg_type: avg
+        direction: 1
+        threshold: 5
+      - name: lokiRecordsDroppedRatio
+        metric_name: lokiRecordsDroppedRatio
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: loki_flow_drop_ratio
+          agg_type: avg
+        direction: 1
+        threshold: 5
+      - name: cpuFLPTotals
+        metric_name: cpuFLPTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flp_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: cpuEBPFTotals
+        metric_name: cpuEBPFTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: ebpf_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: cpuLokiTotals
+        metric_name: cpuLokiTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: loki_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: cpuKafkaTotals
+        metric_name: cpuKafkaTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: kafka_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: cpuPrometheusTotals
+        metric_name: cpuPrometheusTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: prometheus_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: rssFLPTotals
+        metric_name: rssFLPTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flp_rss
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: rssEBPFTotals
+        metric_name: rssEBPFTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: ebpf_rss
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: rssLokiTotals
+        metric_name: rssLokiTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: loki_rss
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: rssKafkaTotals
+        metric_name: rssKafkaTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: kafka_rss
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: rssPrometheusTotals
+        metric_name: rssPrometheusTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: prometheus_rss
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: TotalNetObservCPUUsage
+        metric_name: TotalNetObservCPUUsage
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: netobserv_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: TotalNetObservRSSUsage
+        metric_name: TotalNetObservRSSUsage
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: netobserv_rss
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: TotalClusterCPUUsage
+        metric_name: TotalClusterCPUUsage
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: cluster_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: TotalClusterRSSUsage
+        metric_name: TotalClusterRSSUsage
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: cluster_rss
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: TotalNetworkBytesOut
+        metric_name: TotalNetworkBytesOut
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: network_bytes_out
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: TotalNetworkBytesIn
+        metric_name: TotalNetworkBytesIn
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: network_bytes_in
+          agg_type: avg
+        direction: 1
+        threshold: 60
+      - name: NetObservClusterCPUPercentUtil
+        metric_name: NetObservClusterCPUPercentUtil
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: netobserv_cluster_cpu_percent_util
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: NetObservClusterMemPercentUtil
+        metric_name: NetObservClusterMemPercentUtil
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: netobserv_cluster_mem_percent_util
+          agg_type: avg
+        direction: 1
+        threshold: 10
