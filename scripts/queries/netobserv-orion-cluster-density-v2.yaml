@@ -1,13 +1,12 @@
 tests:
-  - name: netobserv-perf-node-density-heavy-{{ platform }}-{{ workers }}w
+  - name: netobserv-perf-node-density-heavy-AWS-{{ workers }}w
     index: perf_scale_ci*
     benchmarkIndex: prod-netobserv-datapoints*
     metadata:
       benchmark.keyword: cluster-density-v2
-      platform: {{ platform }}
-      buildUrl: {{ buildurl }}
+      platform: AWS
       workerNodesCount: {{ workers }}
-      ocpVersion: {{ version }}
+      ocpVersion: 4
       jobType: periodic
     metrics:
       - name: nFlowsProcessedTotals
