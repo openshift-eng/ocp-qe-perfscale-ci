@@ -177,4 +177,6 @@ orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml
 
 Note that orion config files with suffix `*-ospst.yaml` are custom to OpenSearch instance: https://opensearch-dashboard.app.intlab.redhat.com (VPN Required), credentials can be obtained from bitwarden.
 
+Set env var `export ES_SERVER='https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com'`
+
 Orion config files without `*-ospst.yaml` are for OpenSearch instance https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com/ , data here is only preserved for last 60 days and older data can be found on https://opensearch-dashboard.app.intlab.redhat.com
