@@ -202,16 +202,16 @@
 - query: sum(container_memory_working_set_bytes{namespace="netobserv", container="", pod=~"kafka.*"})
   metricName: workingsetKafkaTotals
 
-######################
-# Prometheus metrics #
-######################
+#######################
+# Metrics Cardinality #
+#######################
 
 # netobserv total metrics cardinality ingested in Prometheus
-- query: count({__name__=~"netobserv_.*"})
+- query: sum(scrape_samples_post_metric_relabeling{job=~"flowlogs-pipeline-prom|flowlogs-pipeline-transformer-prom|ebpf-agent-svc-prom"})
   metricName: metricsCardinality
 
 # FLP metrics cardinality ingested in Prometheus
-- query: count({__name__=~"netobserv_.*",job="flowlogs-pipeline-prom"})
+- query: sum(scrape_samples_post_metric_relabeling{job="flowlogs-pipeline-prom"})
   metricName: flpMetricsCardinality
 
 ###########################
