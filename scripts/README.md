@@ -115,6 +115,7 @@ The Network Observability Prometheus and Elasticsearch tool, or NOPE, is a Pytho
 ```bash
 $ export ES_USERNAME=<elasticsearch username>
 $ export ES_PASSWORD=<elasticsearch password>
+$ export ES_SERVER=https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com
 ```
 4. Run the tool with `./scripts/nope.py`
 
@@ -157,3 +158,25 @@ where workloads UUIDs are:
 
 ## Performance comparison sheets update
 [noo_perfsheets_update.py](scripts/sheets/noo_perfsheets_update.py) is a tool to update the performance comparison sheets that are generated during the network observability performance testings runs which makes use of upstream tool [csv_gen.py](https://github.com/cloud-bulldozer/e2e-benchmarking/blob/master/utils/csv_gen.py). It  replaces the UUIDs with identifiable information and removes redundant rows from the initial generated sheet. To update the correct sheet it relies on [log line](https://github.com/cloud-bulldozer/e2e-benchmarking/blob/master/utils/csv_gen.py#L47) to fetch the sheet name in the Jenkins pipeline.
+
+## Change point detection and comparison with Orion:
+[Orion](https://github.com/cloud-bulldozer/orion/?tab=readme-ov-file#orion---cli-tool-to-find-regressions) is a tool aimed to detect the change point in the performance metrics across several past runs and aimed to replace touchstone
+
+To detech regressions and change point use `--hunter-analyze` algorithm and to compare 2 uuids, use `--cmr` algorithm, below are the example commands of both runs:
+
+## Compare 2 uuids with Orion:
+
+```bash
+orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml --uuid 4edb6734-f080-43f6-82ca-05b23e294d87 --baseline a2ff22ab-63cb-4aa2-a253-e9aaadc115a9 --cmr
+```
+
+## Detect a change point:
+```bash
+orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml --hunter-analyze --lookback 60d
+```
+
+Note that orion config files with suffix `*-ospst.yaml` are custom to OpenSearch instance: https://opensearch-dashboard.app.intlab.redhat.com (VPN Required), credentials can be obtained from bitwarden.
+
+Set env var `export ES_SERVER='https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com'`
+
+Orion config files without `*-ospst.yaml` are for OpenSearch instance https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com/ , data here is only preserved for last 60 days and older data can be found on https://opensearch-dashboard.app.intlab.redhat.com
