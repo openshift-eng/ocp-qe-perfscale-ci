@@ -181,6 +181,24 @@ tests:
           agg_type: avg
         direction: 1
         threshold: 60
+      - name: metricsCardinality
+        metric_name: metricsCardinality
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: metrics_cardinality
+          agg_type: avg
+        direction: 0
+        threshold: 30
+      - name: flpMetricsCardinality
+        metric_name: flpMetricsCardinality
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flp_metrics_cardinality
+          agg_type: avg
+        direction: 0
+        threshold: 30
       - name: TotalNetObservCPUUsage
         metric_name: TotalNetObservCPUUsage
         timestamp: iso_timestamp
