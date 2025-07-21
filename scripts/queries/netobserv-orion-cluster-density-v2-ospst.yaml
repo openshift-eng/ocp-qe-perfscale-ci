@@ -91,6 +91,15 @@ tests:
           agg_type: avg
         direction: 1
         threshold: 5
+      - name: cpuOperatorTotals
+        metric_name: cpuOperatorTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: noo_cpu
+          agg_type: avg
+        direction: 1
+        threshold: 60
       - name: cpuFLPTotals
         metric_name: cpuFLPTotals
         timestamp: iso_timestamp
@@ -136,6 +145,15 @@ tests:
           agg_type: avg
         direction: 1
         threshold: 60
+      - name: rssOperatorTotals
+        metric_name: rssOperatorTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: noo_rss
+          agg_type: avg
+        direction: 1
+        threshold: 10
       - name: rssFLPTotals
         metric_name: rssFLPTotals
         timestamp: iso_timestamp
