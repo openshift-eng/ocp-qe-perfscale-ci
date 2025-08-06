@@ -8,6 +8,8 @@ RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/o
 RUN apt-get update && apt-get install -y gettext-base uuid-runtime jq openssh-client sshpass iputils-ping ncat && \
     ln -s /bin/bash /usr/bin/bash && /usr/local/bin/python -m pip install --upgrade pip && pip install virtualenv jq
 
+RUN setcap -r /bin/ping
+
 RUN curl -sSL $(curl -sSL https://api.github.com/repos/openshift/rosa/releases/latest | jq -r ".assets[] | select(.name == \"rosa_Linux_x86_64.tar.gz\") | .browser_download_url") | tar xvzf - &&\
     mv rosa /bin && chmod 777 /bin/rosa
 
