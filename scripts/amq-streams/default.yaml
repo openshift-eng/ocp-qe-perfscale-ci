@@ -7,6 +7,9 @@ objects:
   kind: Kafka
   metadata:
     name: kafka-cluster
+    annotations:
+      strimzi.io/kraft: enabled
+      strimzi.io/node-pools: enabled
   spec:
     kafka:
       replicas: 3
@@ -41,31 +44,14 @@ objects:
         log.retention.ms: 1680000
         log.roll.ms: 7200000
         log.segment.bytes: 1073741824
-      storage:
-        type: persistent-claim
-        size: 200Gi
-        class: ${DEFAULT_SC}
+      metadataVersion: 4.0-IV3
+      version: 4.0.0
       metricsConfig:
         type: jmxPrometheusExporter
         valueFrom:
           configMapKeyRef:
             name: kafka-metrics
             key: kafka-metrics-config.yml
-    zookeeper:
-      replicas: 3
-      storage:
-        type: persistent-claim
-        size: 20Gi
-        class: ${DEFAULT_SC}
-      metricsConfig:
-        type: jmxPrometheusExporter
-        valueFrom:
-          configMapKeyRef:
-            name: kafka-metrics
-            key: zookeeper-metrics-config.yml
     entityOperator:
       topicOperator: {}
       userOperator: {}
-parameters:
-- name: DEFAULT_SC
-  value: gp3-csi
