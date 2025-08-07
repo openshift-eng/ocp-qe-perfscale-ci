@@ -131,7 +131,7 @@ pipeline {
             description: '''
                 Network Observability can be installed from the following sources:<br/>
                 <b>Official</b> installs the <b>latest released downstream</b> version of the operator, i.e. what is available to customers<br/>
-                <b>Internal</b> installs the <b>latest unreleased downstream 1.8 version</b>of the operator, i.e. the most recent internal bundle<br/>
+                <b>Internal</b> installs the <b>latest unreleased downstream 1.10 version</b>of the operator, i.e. the most recent internal bundle<br/>
                 <b>Source</b> installs the <b>latest unreleased upstream</b> version of the operator, i.e. directly from the main branch of the upstream source code<br/>
                 If <b>None</b> is selected the Operator installation and flowcollector configuration will be skipped
             '''

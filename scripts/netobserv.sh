@@ -315,7 +315,9 @@ deploy_kafka() {
   echo "====> Creating kafka-metrics ConfigMap and kafka-resources-metrics PodMonitor"
   oc apply -f $SCRIPTS_DIR/amq-streams/metrics-config.yaml -n netobserv
   echo "====> Creating kafka-cluster Kafka"
-  oc process -f $SCRIPTS_DIR/amq-streams/default.yaml -p DEFAULT_SC="$DEFAULT_SC" -n netobserv | oc apply -n netobserv -f -
+  oc process -f $SCRIPTS_DIR/amq-streams/default.yaml -n netobserv | oc apply -n netobserv -f -
+  echo "====> Creating kafka-pool KafkaNodePool"
+  oc process -f $SCRIPTS_DIR/amq-streams/nodePool.yaml -n netobserv | oc apply -n netobserv -f -
 
   echo "====> Creating network-flows KafkaTopic"
   if [[ -z $TOPIC_PARTITIONS ]]; then
@@ -359,6 +361,7 @@ delete_lokistack() {
 delete_kafka() {
   echo "====> Deleting Kafka"
   oc delete --ignore-not-found kafkaTopic/network-flows -n netobserv || true
+  oc delete --ignore-not-found kafkaNodePool/kafka-pool -n netobserv || true
   oc delete --ignore-not-found kafka/kafka-cluster -n netobserv || true
   oc delete --ignore-not-found -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml || true
   oc delete --ignore-not-found csv -l operators.coreos.com/amq-streams.openshift-operators -n openshift-operators || true

@@ -1,0 +1,23 @@
+kind: Template
+apiVersion: template.openshift.io/v1
+metadata:
+  name: netobserv-kafkapool-template
+objects:
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaNodePool
+  metadata:
+    name: kafka-pool
+    labels:
+      strimzi.io/cluster: kafka-cluster
+  spec:
+    replicas: 3
+    roles:
+      - broker
+      - controller
+    storage:
+      type: jbod
+      volumes:
+        - deleteClaim: false
+          id: 0
+          size: 100Gi
+          type: persistent-claim
