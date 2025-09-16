@@ -113,9 +113,9 @@ The Network Observability Prometheus and Elasticsearch tool, or NOPE, is a Pytho
 2. Install requirements with `pip install -r scripts/requirements.txt`
 3. If you wish to upload to Elasticsearch, set the following environmental variables:
 ```bash
-$ export ES_USERNAME=<elasticsearch username>
-$ export ES_PASSWORD=<elasticsearch password>
-$ export ES_SERVER=https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com
+export ES_USERNAME=<elasticsearch username>
+export ES_PASSWORD=<elasticsearch password>
+export ES_SERVER=https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com
 ```
 4. Run the tool with `./scripts/nope.py`
 
@@ -167,16 +167,22 @@ To detech regressions and change point use `--hunter-analyze` algorithm and to c
 ## Compare 2 uuids with Orion:
 
 ```bash
+export WORKERS=25
+export es_metadata_index=ospst-perf_scale_ci*
+export es_benchmark_index=ospst-prod-netobserv-datapoints*
+export ES_SERVER=https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com
 orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml --uuid 4edb6734-f080-43f6-82ca-05b23e294d87 --baseline a2ff22ab-63cb-4aa2-a253-e9aaadc115a9 --cmr
 ```
 
 ## Detect a change point:
 ```bash
-orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml --hunter-analyze --lookback 60d
+export WORKERS=25
+export es_metadata_index=perf_scale_ci*
+export es_benchmark_index=prod-netobserv-datapoints*
+export ES_SERVER=https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com
+orion cmd --config scripts/queries/netobserv-orion-node-density-heavy.yaml --hunter-analyze --lookback 15d
 ```
 
 Note that orion config files with suffix `*-ospst.yaml` are custom to OpenSearch instance: https://opensearch-dashboard.app.intlab.redhat.com (VPN Required), credentials can be obtained from bitwarden.
-
-Set env var `export ES_SERVER='https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com'`
 
 Orion config files without `*-ospst.yaml` are for OpenSearch instance https://search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com/ , data here is only preserved for last 60 days and older data can be found on https://opensearch-dashboard.app.intlab.redhat.com

@@ -211,7 +211,7 @@
   metricName: metricsCardinality
 
 # FLP metrics cardinality ingested in Prometheus
-- query: sum(scrape_samples_post_metric_relabeling{job="flowlogs-pipeline-prom"})
+- query: sum(scrape_samples_post_metric_relabeling{job=~"flowlogs-pipeline-prom|flowlogs-pipeline-transformer-prom"})
   metricName: flpMetricsCardinality
 
 ###########################
