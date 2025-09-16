@@ -167,20 +167,22 @@ To detech regressions and change point use `--hunter-analyze` algorithm and to c
 ## Compare 2 uuids with Orion:
 
 ```bash
-export WORKERS=25
+export workers=25
 export es_metadata_index=ospst-perf_scale_ci*
 export es_benchmark_index=ospst-prod-netobserv-datapoints*
+export version=4.20.0
 export ES_SERVER=https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com
 orion cmd --config scripts/queries/netobserv-orion-node-density-heavy-ospst.yaml --uuid 4edb6734-f080-43f6-82ca-05b23e294d87 --baseline a2ff22ab-63cb-4aa2-a253-e9aaadc115a9 --cmr
 ```
 
 ## Detect a change point:
 ```bash
-export WORKERS=25
+export workers=25
 export es_metadata_index=perf_scale_ci*
 export es_benchmark_index=prod-netobserv-datapoints*
+export version=4.20.0
 export ES_SERVER=https://$ES_USERNAME:$ES_PASSWORD@search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com
-orion cmd --config scripts/queries/netobserv-orion-node-density-heavy.yaml --hunter-analyze --lookback 15d
+orion --config scripts/queries/netobserv-orion-node-density-heavy.yaml --hunter-analyze --lookback 15d
 ```
 
 Note that orion config files with suffix `*-ospst.yaml` are custom to OpenSearch instance: https://opensearch-dashboard.app.intlab.redhat.com (VPN Required), credentials can be obtained from bitwarden.
