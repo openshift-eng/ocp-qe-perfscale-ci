@@ -4,7 +4,7 @@ tests:
       benchmark.keyword: node-density-heavy
       platform: AWS
       workerNodesCount: {{ workers }}
-      ocpVersion: {{ version }}
+      ocpVersion: "{{ version }}"
       jobType: periodic
     metrics:
       - name: nFlowsProcessedTotals
