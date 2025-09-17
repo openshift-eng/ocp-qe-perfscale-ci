@@ -6,7 +6,7 @@ tests:
       benchmark.keyword: cluster-density-v2
       platform: AWS
       workerNodesCount: {{ workers }}
-      ocpVersion: {{ version }}
+      ocpVersion: "{{ version }}"
       jobType: periodic
     metrics:
       - name: nFlowsProcessedTotals
