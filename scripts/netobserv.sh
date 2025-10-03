@@ -265,7 +265,7 @@ deploy_lokistack() {
     return 1
   fi
   echo "====> Configuring Loki rate limit alert"
-  oc apply -f $SCRIPTS_DIR/loki/loki-ratelimit-alert.yaml -n $LOKI_NS
+  oc apply -f $SCRIPTS_DIR/loki/loki-ratelimit-alert.yaml
 }
 
 deploy_downstream_catalogsource() {
