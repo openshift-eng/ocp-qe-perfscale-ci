@@ -31,7 +31,7 @@ objects:
       storageClassName: ${DEFAULT_SC}
 parameters:
   - name: NAMESPACE
-    value: netobserv
+    value: netobserv-loki
   - name: SIZE
     value: "1x.extra-small"
   - name: DEFAULT_SC

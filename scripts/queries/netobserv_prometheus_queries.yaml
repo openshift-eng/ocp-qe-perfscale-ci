@@ -147,19 +147,19 @@
 ################
 
 # total CPU usage by all loki pods - per pod is not included here as that is collected above
-- query: sum(pod:container_cpu_usage:sum{namespace="netobserv", pod=~"loki.*"})
+- query: sum(pod:container_cpu_usage:sum{namespace="netobserv-loki", pod=~"loki.*"})
   metricName: cpuLokiTotals
 
 # total RSS by all loki pods - per pod is not included here as that is collected above
-- query: sum(container_memory_rss{namespace="netobserv", pod=~"loki.*", container=""})
+- query: sum(container_memory_rss{namespace="netobserv-loki", pod=~"loki.*", container=""})
   metricName: rssLokiTotals
 
 # total working set memory by all loki pods - per pod is not included here as that is collected above
-- query: sum(container_memory_working_set_bytes{namespace="netobserv", pod=~"loki.*", container=""})
+- query: sum(container_memory_working_set_bytes{namespace="netobserv-loki", pod=~"loki.*", container=""})
   metricName: workingsetLokiTotals
 
 # lokistack PVC usage averaging over 5 mins period
-- query: sum((avg_over_time(kubelet_volume_stats_used_bytes{namespace="netobserv", persistentvolumeclaim=~".*loki.*"}[5m])))
+- query: sum((avg_over_time(kubelet_volume_stats_used_bytes{namespace="netobserv-loki", persistentvolumeclaim=~".*loki.*"}[5m])))
   metricName: lokiStorageUsage
 
 # total loki records written
@@ -187,19 +187,19 @@
 #################
 
 # Kafka PVC usage averaging over 5 mins period
-- query: sum((avg_over_time(kubelet_volume_stats_used_bytes{namespace="netobserv", persistentvolumeclaim=~".*kafka.*"}[5m])))
+- query: sum((avg_over_time(kubelet_volume_stats_used_bytes{namespace="netobserv-kafka", persistentvolumeclaim=~".*kafka.*"}[5m])))
   metricName: kafkaStorageUsage
 
 # total CPU usage by all kafka pods - per pod is not included here as that is collected above
-- query: sum(pod:container_cpu_usage:sum{namespace="netobserv", pod=~"kafka.*"})
+- query: sum(pod:container_cpu_usage:sum{namespace="netobserv-kafka", pod=~"kafka.*"})
   metricName: cpuKafkaTotals
 
 # total RSS by all kafka pods - per pod is not included here as that is collected above
-- query: sum(container_memory_rss{namespace="netobserv", container="", pod=~"kafka.*"})
+- query: sum(container_memory_rss{namespace="netobserv-kafka", container="", pod=~"kafka.*"})
   metricName: rssKafkaTotals
 
 # total working set memory by all Kafka pods - per pod is not included here as that is collected above
-- query: sum(container_memory_working_set_bytes{namespace="netobserv", container="", pod=~"kafka.*"})
+- query: sum(container_memory_working_set_bytes{namespace="netobserv-kafka", container="", pod=~"kafka.*"})
   metricName: workingsetKafkaTotals
 
 #######################

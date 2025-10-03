@@ -38,7 +38,7 @@ objects:
         advanced:
         kafkaConsumerReplicas: ${{KafkaConsumerReplicas}}
       kafka:
-        address: kafka-cluster-kafka-bootstrap.netobserv
+        address: kafka-cluster-kafka-bootstrap.${{KafkaNS}}
         topic: network-flows
         tls:
           enable: false
@@ -47,6 +47,11 @@ objects:
         enable: "${{LokiEnable}}"
         lokiStack:
           name: lokistack
+          namespace: ${{LokiNS}}
+      networkPolicy:
+        enable: true
+        additionalNamespaces: 
+          - ${{KafkaNS}}
 parameters:
   - name: DeploymentModel
     value: "Kafka"
@@ -64,3 +69,7 @@ parameters:
     value: "true"
   - name: KafkaConsumerReplicas
     value: "3"
+  - name: KafkaNS
+    value: netobserv-kafka
+  - name: LokiNS
+    value: netobserv-loki
