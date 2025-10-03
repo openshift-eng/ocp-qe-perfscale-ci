@@ -225,8 +225,10 @@ deploy_lokistack() {
 
   S3_BUCKET_NAME+="-preserve"
   echo "====> S3_BUCKET_NAME is $S3_BUCKET_NAME"
-
+  echo "====> Creating $LOKI_NS Project (if it does not already exist)"
+  oc new-project $LOKI_NS || true
   echo "====> Creating S3 secret for Loki"
+  
   $SCRIPTS_DIR/deploy-loki-aws-secret.sh $S3_BUCKET_NAME $LOKI_NS
   sleep 60
   timeout=0
@@ -252,8 +254,6 @@ deploy_lokistack() {
     SIZE="1x.extra-small"
   fi
 
-  echo "====> Creating $LOKI_NS Project (if it does not already exist)"
-  oc new-project $LOKI_NS || true
   echo "====> Creating LokiStack"
   oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC NAMESPACE=$LOKI_NS -n default -o yaml >"$ARTIFACT_DIR"/lokiStack.yaml
   oc apply -f "$ARTIFACT_DIR"/lokiStack.yaml -n $LOKI_NS
