@@ -190,7 +190,6 @@ waitForResources(){
 
 deploy_lokistack() {
   echo "====> Deploying LokiStack"
-  oc new-project netobserv || true
 
   echo "====> Creating openshift-operators-redhat Namespace and OperatorGroup"
   oc apply -f $SCRIPTS_DIR/loki/loki-operatorgroup.yaml
@@ -360,6 +359,7 @@ delete_s3() {
 delete_lokistack() {
   echo "====> Deleting LokiStack"
   oc delete --ignore-not-found lokistack/lokistack -n $LOKI_NS || true
+  oc delete --ignore-not-found project $LOKI_NS || true
 }
 
 
@@ -370,6 +370,7 @@ delete_kafka() {
   oc delete --ignore-not-found kafka/kafka-cluster -n $KAFKA_NS || true
   oc delete --ignore-not-found -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml || true
   oc delete --ignore-not-found csv -l operators.coreos.com/amq-streams.openshift-operators -n openshift-operators || true
+  oc delete --ignore-not-found project $KAFKA_NS || true
 }
 
 delete_flowcollector() {
