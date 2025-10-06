@@ -2,6 +2,8 @@
 
 SCRIPTS_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 export DEFAULT_SC=$(oc get storageclass -o=jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}')
+export LOKI_NS="netobserv-loki"
+export KAFKA_NS="netobserv-kafka"
 
 if [[ -z "${ARTIFACT_DIR}" ]]; then
   ARTIFACT_DIR=/tmp
@@ -171,10 +173,11 @@ get_loki_channel() {
 
 waitForResources(){
   resources=$1
+  ns=$2
   timeout=0
   rc=1
   while [ $timeout -lt 600 ]; do
-    status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n netobserv)
+    status=$(oc get $resources -o jsonpath='{.status.conditions[0].type}' -n $ns)
     if [[ $status == "Ready" ]]; then
       rc=0
       break
@@ -187,8 +190,6 @@ waitForResources(){
 
 deploy_lokistack() {
   echo "====> Deploying LokiStack"
-  echo "====> Creating NetObserv Project (if it does not already exist)"
-  oc new-project netobserv || true
 
   echo "====> Creating openshift-operators-redhat Namespace and OperatorGroup"
   oc apply -f $SCRIPTS_DIR/loki/loki-operatorgroup.yaml
@@ -223,9 +224,11 @@ deploy_lokistack() {
 
   S3_BUCKET_NAME+="-preserve"
   echo "====> S3_BUCKET_NAME is $S3_BUCKET_NAME"
-
+  echo "====> Creating $LOKI_NS Project (if it does not already exist)"
+  oc new-project $LOKI_NS || true
   echo "====> Creating S3 secret for Loki"
-  $SCRIPTS_DIR/deploy-loki-aws-secret.sh $S3_BUCKET_NAME
+  
+  $SCRIPTS_DIR/deploy-loki-aws-secret.sh $S3_BUCKET_NAME $LOKI_NS
   sleep 60
   timeout=0
   while [ $timeout -lt 300 ]; do
@@ -251,11 +254,11 @@ deploy_lokistack() {
   fi
 
   echo "====> Creating LokiStack"
-  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC -n default -o yaml >"$ARTIFACT_DIR"/lokiStack.yaml
-  oc apply -f "$ARTIFACT_DIR"/lokiStack.yaml
+  oc process --ignore-unknown-parameters=true -f $SCRIPTS_DIR/loki/lokistack.yaml -p SIZE=$SIZE DEFAULT_SC=$DEFAULT_SC NAMESPACE=$LOKI_NS -n default -o yaml >"$ARTIFACT_DIR"/lokiStack.yaml
+  oc apply -f "$ARTIFACT_DIR"/lokiStack.yaml -n $LOKI_NS
   sleep 30
   echo "====> Waiting lokistack to be ready"
-  lokistackReady=$(waitForResources "lokistack/lokistack")
+  lokistackReady=$(waitForResources "lokistack/lokistack" $LOKI_NS)
   if [ "${lokistackReady}" == 1 ]; then
     echo "LokiStack did not become Ready after 600 secs!!!"
     return 1
@@ -301,8 +304,9 @@ deploy_upstream_catalogsource() {
 }
 
 deploy_kafka() {
+  echo "====> Creating $KAFKA_NS Project (if it does not already exist)"
+  oc new-project netobserv-kafka || true
   echo "====> Deploying Kafka"
-  oc new-project netobserv || true
   echo "====> Creating amq-streams Subscription"
   oc apply -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml
   sleep 60
@@ -313,11 +317,11 @@ deploy_kafka() {
   oc -n openshift-operators patch csv $CSV_NAME --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/resources/limits/memory", "value": "1Gi"}]"
   
   echo "====> Creating kafka-metrics ConfigMap and kafka-resources-metrics PodMonitor"
-  oc apply -f $SCRIPTS_DIR/amq-streams/metrics-config.yaml -n netobserv
+  oc apply -f $SCRIPTS_DIR/amq-streams/metrics-config.yaml -n $KAFKA_NS
   echo "====> Creating kafka-cluster Kafka"
-  oc process -f $SCRIPTS_DIR/amq-streams/default.yaml -n netobserv | oc apply -n netobserv -f -
+  oc process -f $SCRIPTS_DIR/amq-streams/default.yaml -n $KAFKA_NS | oc apply -n $KAFKA_NS -f -
   echo "====> Creating kafka-pool KafkaNodePool"
-  oc process -f $SCRIPTS_DIR/amq-streams/nodePool.yaml -n netobserv | oc apply -n netobserv -f -
+  oc process -f $SCRIPTS_DIR/amq-streams/nodePool.yaml -n $KAFKA_NS | oc apply -n $KAFKA_NS -f -
 
   echo "====> Creating network-flows KafkaTopic"
   if [[ -z $TOPIC_PARTITIONS ]]; then
@@ -325,13 +329,13 @@ deploy_kafka() {
     echo "====> To set config, set TOPIC_PARTITIONS variable to desired number"
     export TOPIC_PARTITIONS=6
   fi
-  oc process -f $SCRIPTS_DIR/amq-streams/kafkaTopic.yaml -p TOPIC_PARTITIONS="$TOPIC_PARTITIONS" -n netobserv | oc apply -n netobserv -f -
+  oc process -f $SCRIPTS_DIR/amq-streams/kafkaTopic.yaml -p TOPIC_PARTITIONS="$TOPIC_PARTITIONS" -n $KAFKA_NS | oc apply -n $KAFKA_NS -f -
   sleep 120
-  oc wait --timeout=180s --for=condition=ready kafkatopic network-flows -n netobserv
+  oc wait --timeout=180s --for=condition=ready kafkatopic network-flows -n $KAFKA_NS
 }
 
 delete_s3() {
-  S3_BUCKET_NAME=$(oc get secrets/s3-secret -n netobserv -o jsonpath='{.data.bucketnames}' | base64 -d)
+  S3_BUCKET_NAME=$(oc get secrets/s3-secret -n $LOKI_NS -o jsonpath='{.data.bucketnames}' | base64 -d)
   echo "====> Getting S3 Bucket Name"
   if [[ -z $S3_BUCKET_NAME ]]; then
     echo "====> Could not get S3 Bucket Name"
@@ -354,17 +358,19 @@ delete_s3() {
 
 delete_lokistack() {
   echo "====> Deleting LokiStack"
-  oc delete --ignore-not-found lokistack/lokistack -n netobserv || true
+  oc delete --ignore-not-found lokistack/lokistack -n $LOKI_NS || true
+  oc delete --ignore-not-found project $LOKI_NS || true
 }
 
 
 delete_kafka() {
   echo "====> Deleting Kafka"
-  oc delete --ignore-not-found kafkaTopic/network-flows -n netobserv || true
-  oc delete --ignore-not-found kafkaNodePool/kafka-pool -n netobserv || true
-  oc delete --ignore-not-found kafka/kafka-cluster -n netobserv || true
+  oc delete --ignore-not-found kafkaTopic/network-flows -n $KAFKA_NS || true
+  oc delete --ignore-not-found kafkaNodePool/kafka-pool -n $KAFKA_NS || true
+  oc delete --ignore-not-found kafka/kafka-cluster -n $KAFKA_NS || true
   oc delete --ignore-not-found -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml || true
   oc delete --ignore-not-found csv -l operators.coreos.com/amq-streams.openshift-operators -n openshift-operators || true
+  oc delete --ignore-not-found project $KAFKA_NS || true
 }
 
 delete_flowcollector() {

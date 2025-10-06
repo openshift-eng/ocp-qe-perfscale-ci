@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 LOKI_BUCKET_NAME=${1:-netobserv-ocpqe-default}
-NAMESPACE="netobserv"
+NAMESPACE=${2:-netobserv-loki}
 SECRETNAME="s3-secret"
 AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-2}
 ENDPOINT="https://s3.${AWS_DEFAULT_REGION}.amazonaws.com"
