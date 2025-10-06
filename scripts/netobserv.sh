@@ -10,6 +10,9 @@ if [[ -z "${ARTIFACT_DIR}" ]]; then
 fi
 
 deploy_netobserv() {
+  echo "====> Creating NetObserv Project (if it does not already exist)"
+  oc new-project netobserv || true
+
   echo "====> Deploying NetObserv"
   export NETOBSERV_CHANNEL='stable'
   export NETOBSERV_SOURCE="netobserv-testing"
