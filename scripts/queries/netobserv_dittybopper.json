@@ -874,7 +874,7 @@
             "type": "prometheus",
             "uid": "PF55DCC5EC58ABF5A"
           },
-          "expr": "sum(pod:container_cpu_usage:sum{namespace=\"netobserv\", pod=~\"kafka.*\"})",
+          "expr": "sum(pod:container_cpu_usage:sum{namespace=\"netobserv-kafka\", pod=~\"kafka.*\"})",
           "interval": "",
           "legendFormat": "Kafka",
           "refId": "C"
@@ -884,7 +884,7 @@
             "type": "prometheus",
             "uid": "PF55DCC5EC58ABF5A"
           },
-          "expr": "sum(pod:container_cpu_usage:sum{namespace=\"netobserv\", pod=~\"loki.*\"})",
+          "expr": "sum(pod:container_cpu_usage:sum{namespace=\"netobserv-loki\", pod=~\"loki.*\"})",
           "interval": "",
           "legendFormat": "Loki",
           "refId": "D"
@@ -1177,7 +1177,7 @@
             "uid": "PF55DCC5EC58ABF5A"
           },
           "editorMode": "code",
-          "expr": "pod:container_cpu_usage:sum{namespace=\"netobserv\", pod=~\"loki.*\"}",
+          "expr": "pod:container_cpu_usage:sum{namespace=\"netobserv-loki\", pod=~\"loki.*\"}",
           "interval": "",
           "legendFormat": "{{pod}}",
           "range": true,
@@ -1270,7 +1270,7 @@
             "uid": "PF55DCC5EC58ABF5A"
           },
           "editorMode": "code",
-          "expr": "pod:container_cpu_usage:sum{namespace=\"netobserv\", pod=~\"kafka.*\"}",
+          "expr": "pod:container_cpu_usage:sum{namespace=\"netobserv-kafka\", pod=~\"kafka.*\"}",
           "interval": "",
           "legendFormat": "{{pod}}",
           "range": true,
@@ -1408,7 +1408,7 @@
             "type": "prometheus",
             "uid": "PF55DCC5EC58ABF5A"
           },
-          "expr": "sum(container_memory_rss{namespace=\"netobserv\", pod=~\"kafka.*\", container=\"\"})",
+          "expr": "sum(container_memory_rss{namespace=\"netobserv-kafka\", pod=~\"kafka.*\", container=\"\"})",
           "interval": "",
           "legendFormat": "Kafka",
           "refId": "C"
@@ -1418,7 +1418,7 @@
             "type": "prometheus",
             "uid": "PF55DCC5EC58ABF5A"
           },
-          "expr": "sum(container_memory_rss{namespace=\"netobserv\", pod=~\"loki.*\", container=\"\"})",
+          "expr": "sum(container_memory_rss{namespace=\"netobserv-loki\", pod=~\"loki.*\", container=\"\"})",
           "interval": "",
           "legendFormat": "Loki",
           "refId": "D"
@@ -1712,7 +1712,7 @@
             "type": "prometheus",
             "uid": "PF55DCC5EC58ABF5A"
           },
-          "expr": "sum(container_memory_rss{namespace=\"netobserv\", pod=~\"loki.*\", container=\"\", node=~\"$_node\"}) by (container, pod, namespace, node )",
+          "expr": "sum(container_memory_rss{namespace=\"netobserv-loki\", pod=~\"loki.*\", container=\"\", node=~\"$_node\"}) by (container, pod, namespace, node )",
           "interval": "",
           "legendFormat": "{{pod}}",
           "refId": "A"
@@ -1804,7 +1804,7 @@
             "uid": "PF55DCC5EC58ABF5A"
           },
           "editorMode": "code",
-          "expr": "sum(container_memory_rss{namespace=\"netobserv\", pod=~\"kafka.*\", container=\"\", node=~\"$_node\"}) by (container, pod, namespace, node )",
+          "expr": "sum(container_memory_rss{namespace=\"netobserv-kafka\", pod=~\"kafka.*\", container=\"\", node=~\"$_node\"}) by (container, pod, namespace, node )",
           "interval": "",
           "legendFormat": "{{pod}}",
           "range": true,
@@ -2204,7 +2204,7 @@
             "uid": "$Datasource"
           },
           "editorMode": "code",
-          "expr": "sum by (persistentvolumeclaim) (avg_over_time(kubelet_volume_stats_used_bytes{namespace=\"netobserv\", persistentvolumeclaim=~\".*loki.*\"}[5m]))",
+          "expr": "sum by (persistentvolumeclaim) (avg_over_time(kubelet_volume_stats_used_bytes{namespace=\"netobserv-loki\", persistentvolumeclaim=~\".*loki.*\"}[5m]))",
           "interval": "",
           "legendFormat": "{{persistentvolumeclaim}}",
           "range": true,
@@ -2390,7 +2390,7 @@
             "uid": "PF55DCC5EC58ABF5A"
           },
           "editorMode": "code",
-          "expr": "sum by (persistentvolumeclaim) (avg_over_time(kubelet_volume_stats_used_bytes{namespace=\"netobserv\", persistentvolumeclaim=~\".*kafka.*\"}[5m]))",
+          "expr": "sum by (persistentvolumeclaim) (avg_over_time(kubelet_volume_stats_used_bytes{namespace=\"netobserv-kafka\", persistentvolumeclaim=~\".*kafka.*\"}[5m]))",
           "interval": "",
           "legendFormat": "{{persistentvolumeclaim}}",
           "range": true,
