@@ -1,0 +1,8 @@
+---
+ack:
+  - uuid: 58a57780-480e-481f-b31d-582fdcc853fc
+    metric: TotalNetObservRSSUsage_avg
+    reason: NETOBSERV-2439
+  - uuid:  58a57780-480e-481f-b31d-582fdcc853fc
+    metric: NetObservClusterMemPercentUtil_avg
+    reason: NETOBSERV-2439
