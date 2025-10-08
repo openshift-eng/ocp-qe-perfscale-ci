@@ -362,7 +362,6 @@ delete_s3() {
 delete_lokistack() {
   echo "====> Deleting LokiStack"
   oc delete --ignore-not-found lokistack/lokistack -n $LOKI_NS || true
-  oc delete --ignore-not-found project $LOKI_NS || true
 }
 
 
@@ -405,6 +404,7 @@ nukeobserv() {
     delete_lokistack
     delete_loki_operator
     delete_s3
+    oc delete --ignore-not-found project $LOKI_NS || true
   fi
   delete_flowcollector
   delete_netobserv_operator
