@@ -308,7 +308,7 @@ deploy_upstream_catalogsource() {
 
 deploy_kafka() {
   echo "====> Creating $KAFKA_NS Project (if it does not already exist)"
-  oc new-project netobserv-kafka || true
+  oc new-project $KAFKA_NS || true
   echo "====> Deploying Kafka"
   echo "====> Creating amq-streams Subscription"
   oc apply -f $SCRIPTS_DIR/amq-streams/amq-streams-subscription.yaml
