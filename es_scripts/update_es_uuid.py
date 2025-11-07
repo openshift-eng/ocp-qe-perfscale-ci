@@ -3,8 +3,6 @@ import time
 from elasticsearch import Elasticsearch
 import urllib3
 
-
-
 # elasticsearch constants
 ES_URL = os.environ.get('ES_URL','search-ocp-qe-perf-scale-test-elk-hcm7wtsqpxy7xogbu72bor4uve.us-east-1.es.amazonaws.com')
 ES_USERNAME = os.environ.get('ES_USERNAME')
