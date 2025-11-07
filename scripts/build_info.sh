@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -x
 # check whether it's running on jenkins or prow
 if [[ -n $JENKINS_HOME ]]; then
     # when running on jenkins
@@ -25,4 +24,5 @@ bundle_tag=${bundle_tag//\"/}
 # remove quotes and milliseconds from created date
 CREATED_DATE=${CREATED_DATE//\"/}
 CREATED_DATE=${CREATED_DATE//\./}
-echo "$RELEASE-$CREATED_DATE-$bundle_tag"
+short_tag="${bundle_tag:0:7}"
+echo "$RELEASE-$CREATED_DATE-$short_tag"
