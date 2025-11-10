@@ -11,6 +11,7 @@ if [[ -n $JENKINS_HOME ]]; then
 else
     OPM_BIN=$(which opm)
 fi
+set -x
 
 RELEASE=$(oc get pods -l app=netobserv-operator -o jsonpath="{.items[*].spec.containers[0].env[?(@.name=='OPERATOR_CONDITION_NAME')].value}" -A | cut -d 'v' -f 3)
 catalogName=$(oc get sub/netobserv-operator -n openshift-netobserv-operator -o jsonpath='{.spec.source}')
