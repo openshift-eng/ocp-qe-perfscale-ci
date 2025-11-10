@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # check whether it's running on jenkins or prow
+TOOLS_DIR=/tmp/bin
 if [[ -n $JENKINS_HOME ]]; then
     # when running on jenkins
     mkdir -p ~/.kube
@@ -9,6 +10,9 @@ if [[ -n $JENKINS_HOME ]]; then
     tar xf opm-linux.tar.gz
     OPM_BIN="./opm-rhel8"
 else
+    mkdir -p ${TOOLS_DIR}
+    export PATH=${TOOLS_DIR}:${PATH}
+    curl -L --retry 5 https://github.com/operator-framework/operator-registry/releases/download/v1.26.2/linux-amd64-opm -o ${TOOLS_DIR}/opm && chmod +x ${TOOLS_DIR}/opm
     OPM_BIN=$(which opm)
 fi
 set -x
