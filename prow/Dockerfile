@@ -1,4 +1,4 @@
-FROM quay.io/openshifttest/python:3.9
+FROM registry.redhat.io/ubi8/python-311:latest
 
 LABEL vendor="Red Hat Inc." maintainer="OCP QE Team"
 
