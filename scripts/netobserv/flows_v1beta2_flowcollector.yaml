@@ -35,6 +35,7 @@ objects:
         resources:
           limits:
             memory: ${FLPMemoryLimit}
+        consumerReplicas: ${{FLPConsumerReplicas}}
         advanced:
         kafkaConsumerReplicas: ${{KafkaConsumerReplicas}}
       kafka:
@@ -59,17 +60,19 @@ parameters:
     value: "1"
   - name: EBPFMemoryLimit
     value: "800Mi"
-  - name: FLPMemoryLimit
-    value: "800Mi"
   - name: EBPFPrivileged
     value: "true"
   - name: EBPFCacheMaxFlows
     value: "100000"
+  - name: FLPMemoryLimit
+    value: "800Mi"
+  - name: FLPConsumerReplicas
+    value: "3"
   - name: LokiEnable
     value: "true"
+  - name: LokiNS
+    value: netobserv-loki
   - name: KafkaConsumerReplicas
     value: "3"
   - name: KafkaNS
     value: netobserv-kafka
-  - name: LokiNS
-    value: netobserv-loki

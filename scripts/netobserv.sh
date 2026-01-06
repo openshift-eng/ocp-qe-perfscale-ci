@@ -397,10 +397,36 @@ delete_loki_operator() {
   oc delete --ignore-not-found csv -l operators.coreos.com/loki-operator.openshift-operators-redhat -n openshift-operators-redhat || true
 }
 
+get_deployment_model() {
+  local deployment_model=""
+  if oc get flowcollector cluster &>/dev/null; then
+    deployment_model=$(oc get flowcollector cluster -o jsonpath='{.spec.deploymentModel}' 2>/dev/null || echo "")
+  fi
+  if [[ -z "$deployment_model" ]]; then
+    echo "ERROR: FlowCollector not found or deployment model could not be determined" >&2
+    return 1
+  fi
+  echo "$deployment_model"
+}
+
+is_loki_enabled() {
+  local loki_enabled=""
+  if oc get flowcollector cluster &>/dev/null; then
+    loki_enabled=$(oc get flowcollector cluster -o jsonpath='{.spec.loki.enable}' 2>/dev/null || echo "")
+  fi
+  if [[ -z "$loki_enabled" ]]; then
+    echo "ERROR: FlowCollector not found or loki.enable could not be determined" >&2
+    return 1
+  fi
+  echo "$loki_enabled"
+}
+
 nukeobserv() {
   echo "====> Nuking NetObserv and all related resources"
-  delete_kafka
-  if [[ $LOKI_OPERATOR != "None" ]]; then
+  if [[ $(get_deployment_model 2>/dev/null) == "Kafka" ]]; then
+    delete_kafka
+  fi
+  if [[ $(is_loki_enabled 2>/dev/null) == "true" ]]; then
     delete_lokistack
     delete_loki_operator
     delete_s3
