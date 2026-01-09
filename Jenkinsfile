@@ -870,30 +870,28 @@ def validateParams() {
 }
 
 def setFLPReplicas(){
-    // Set FLP_KAFKA_REPLICAS if not provided
-    if (params.FLP_KAFKA_REPLICAS == "") {
+    if (params.FLP_KAFKA_REPLICAS == "" && params.DEPLOYMENT_MODEL == "Kafka") {
         if (params.WORKLOAD == 'node-density-heavy') {
             env.FLP_KAFKA_REPLICAS = '6'
         }
         else if (params.WORKLOAD == 'cluster-density-v2') {
             env.FLP_KAFKA_REPLICAS = '18'
         }
-        else {
-            env.FLP_KAFKA_REPLICAS = '3'
-        }
+    }
+    else {
+        env.FLP_KAFKA_REPLICAS = '3'
     }
 
-    // Set FLP_CONSUMER_REPLICAS if not provided
-    if (params.FLP_CONSUMER_REPLICAS == "") {
+    if (params.FLP_CONSUMER_REPLICAS == "" && params.DEPLOYMENT_MODEL == "Service") {
         if (params.WORKLOAD == 'node-density-heavy') {
             env.FLP_CONSUMER_REPLICAS = '6'
         }
         else if (params.WORKLOAD == 'cluster-density-v2') {
             env.FLP_CONSUMER_REPLICAS = '18'
         }
-        else {
-            env.FLP_CONSUMER_REPLICAS = '3'
-        }
+    }
+    else {
+        env.FLP_CONSUMER_REPLICAS = '3'
     }
 }
 
