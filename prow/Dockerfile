@@ -2,6 +2,8 @@ FROM quay.io/openshifttest/python:3.9
 
 LABEL vendor="Red Hat Inc." maintainer="OCP QE Team"
 
+COPY --from=docker.io/mikefarah/yq /usr/bin/yq /bin/yq
+
 RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz | tar -xvzf -  &&\
     mv kubectl /bin
 
