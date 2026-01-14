@@ -7,7 +7,7 @@ RUN dnf install -y python3.11 python3.11-pip && ln -s /usr/bin/python3.11 /usr/b
 RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz | tar -xvzf -  &&\
     mv kubectl /bin
 
-RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync && \
+RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync procps-ng && \
     python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv jq
 
 # Remove capabilities from ping - resolve any symlinks to find actual binary
