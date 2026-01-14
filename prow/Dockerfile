@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 
 LABEL vendor="Red Hat Inc." maintainer="OCP QE Team"
 
-RUN dnf install -y python3.11 python3.11-pip
+RUN dnf install -y python3.11 python3.11-pip && ln -s /usr/bin/python3.11 /usr/bin/python
 
 RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz | tar -xvzf -  &&\
     mv kubectl /bin
