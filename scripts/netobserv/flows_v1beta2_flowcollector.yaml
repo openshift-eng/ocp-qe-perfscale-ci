@@ -35,9 +35,7 @@ objects:
         resources:
           limits:
             memory: ${FLPMemoryLimit}
-        consumerReplicas: ${{FLPConsumerReplicas}}
-        advanced:
-        kafkaConsumerReplicas: ${{KafkaConsumerReplicas}}
+        consumerReplicas: ${{KafkaConsumerReplicas}}
       kafka:
         address: kafka-cluster-kafka-bootstrap.${KafkaNS}
         topic: network-flows
@@ -66,13 +64,11 @@ parameters:
     value: "100000"
   - name: FLPMemoryLimit
     value: "800Mi"
-  - name: FLPConsumerReplicas
+  - name: KafkaConsumerReplicas
     value: "3"
   - name: LokiEnable
     value: "true"
   - name: LokiNS
     value: netobserv-loki
-  - name: KafkaConsumerReplicas
-    value: "3"
   - name: KafkaNS
     value: netobserv-kafka
