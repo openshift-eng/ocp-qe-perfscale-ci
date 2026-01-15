@@ -879,7 +879,7 @@ def setTemplateParams(){
     if (params.DEPLOYMENT_MODEL != "Kafka") {
         templateParams += "DeploymentModel=${env.DEPLOYMENT_MODEL} "
     }
-    templateParams += "FLPConsumerReplicas=${env.FLP_CONSUMER_REPLICAS} "
+    templateParams += "KafkaConsumerReplicas=${env.FLP_CONSUMER_REPLICAS} "
     if (params.EBPF_PRIVILEGED == false){
         templateParams += "EBPFPrivileged=${params.EBPF_PRIVILEGED} "
     }
