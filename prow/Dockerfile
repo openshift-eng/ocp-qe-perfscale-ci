@@ -2,12 +2,12 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 
 LABEL vendor="Red Hat Inc." maintainer="OCP QE Team"
 
-RUN dnf install -y python3.11 python3.11-pip && ln -s /usr/bin/python3.11 /usr/bin/python
+RUN dnf install -y python3.11 python3.11-pip && ln -s /usr/bin/python3.11 /usr/bin/python && ln -s /usr/bin/pip3.11 /usr/bin/pip
 
 RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz | tar -xvzf -  &&\
     mv kubectl /bin
 
-RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync procps-ng && \
+RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync procps-ng git && \
     python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv jq
 
 # Remove capabilities from ping - resolve any symlinks to find actual binary
