@@ -176,7 +176,7 @@ pipeline {
         )
         choice(
             name: 'DEPLOYMENT_MODEL',
-            choices: ["Kafka", "Direct", "Service"],
+            choices: ["Kafka", "Service"],
             description: 'FlowCollector Deployment model'
         )
         string(
@@ -198,8 +198,9 @@ pipeline {
             name: 'FLP_CONSUMER_REPLICAS',
             defaultValue: '',
             description: '''
-                <b>Leave this empty if you're triggering perf-workloads with Kafka deploymentModel. 6 and 18 FLP_CONSUMER_REPLICAS should be used for node-density-heavy and cluster-density-v2 workloads respectively for service deploymentModel</b><br/>
-                3 - for non-perf testing environments<br/>
+                <b>Leave this empty if you're triggering standard runs for either of the deploymentModel. 6 and 18 FLP_CONSUMER_REPLICAS should be used for node-density-heavy and cluster-density-v2 workloads respectively</b><br/>
+                <b>For Kafka, replicas should be at least half the number of Kafka TOPIC_PARTITIONS and should not exceed number of TOPIC_PARTITIONS or number of nodes<br/>
+                3 - for non-perf testing environments</b><br/>
                 <b>Use this field to overwrite FLP_CONSUMER_REPLICAS, for e.g. when triggering performance tests with service deploymentModel</b><br/>
             '''
         )
@@ -208,16 +209,6 @@ pipeline {
             choices: [6, 10, 24, 48],
             description: '''
                 Number of Kafka Topic Partitions. 48 Partitions are used for all Perf testing scenarios<br/>
-            '''
-        )
-        string(
-            name: 'FLP_KAFKA_REPLICAS',
-            defaultValue: '',
-            description: '''
-                Replicas should be at least half the number of Kafka TOPIC_PARTITIONS and should not exceed number of TOPIC_PARTITIONS or number of nodes:<br/>
-                <b>Leave this empty if you're triggering standard perf-workloads, default of 6 and 18 FLP_KAFKA_REPLICAS will be used for node-density-heavy and cluster-density-v2 workloads respectively</b><br/>
-                3 - for non-perf testing environments<br/>
-                <b>Use this field to overwrite default FLP_KAFKA_REPLICAS, for e.g. when triggering for ingress-perf workload</b><br/>
             '''
         )
         separator(
@@ -870,19 +861,7 @@ def validateParams() {
 }
 
 def setFLPReplicas(){
-    if (params.FLP_KAFKA_REPLICAS == "" && params.DEPLOYMENT_MODEL == "Kafka") {
-        if (params.WORKLOAD == 'node-density-heavy') {
-            env.FLP_KAFKA_REPLICAS = '6'
-        }
-        else if (params.WORKLOAD == 'cluster-density-v2') {
-            env.FLP_KAFKA_REPLICAS = '18'
-        }
-    }
-    else {
-        env.FLP_KAFKA_REPLICAS = '3'
-    }
-
-    if (params.FLP_CONSUMER_REPLICAS == "" && params.DEPLOYMENT_MODEL == "Service") {
+    if (params.FLP_CONSUMER_REPLICAS == "") {
         if (params.WORKLOAD == 'node-density-heavy') {
             env.FLP_CONSUMER_REPLICAS = '6'
         }
@@ -900,7 +879,6 @@ def setTemplateParams(){
     if (params.DEPLOYMENT_MODEL != "Kafka") {
         templateParams += "DeploymentModel=${env.DEPLOYMENT_MODEL} "
     }
-    templateParams += "KafkaConsumerReplicas=${env.FLP_KAFKA_REPLICAS} "
     templateParams += "FLPConsumerReplicas=${env.FLP_CONSUMER_REPLICAS} "
     if (params.EBPF_PRIVILEGED == false){
         templateParams += "EBPFPrivileged=${params.EBPF_PRIVILEGED} "
