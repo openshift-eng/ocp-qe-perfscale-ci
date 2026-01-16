@@ -70,9 +70,7 @@ deploy_netobserv() {
   # when using Internal builds, patch csv with images
   # of same sha256 of quay.io instead registry.redhat.io
   patch_unreleased_images
-  echo "====> Patch CSV so that DOWNSTREAM_DEPLOYMENT is set to 'true'"
-  CSV=$(oc get csv -n openshift-netobserv-operator | egrep -i "net.*observ" | awk '{print $1}')
-  oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p "[{"op": "replace", "path": "/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/4/value", "value": 'true'}]"
+  patch_netobserv "metrics" "true"
 }
 
 createFlowCollector() {
@@ -106,33 +104,40 @@ waitForFlowcollectorReady() {
 
 patch_netobserv() {
   COMPONENT=$1
-  IMAGE=$2
+  OVERRIDE_VALUE=$2
   CSV=$(oc get csv -n openshift-netobserv-operator | grep -iE "net.*observ" | awk '{print $1}')
-  if [[ -z "$COMPONENT" || -z "$IMAGE" ]]; then
-    echo "Specify COMPONENT and IMAGE to be patched to existing CSV deployed"
+  if [[ -z "$COMPONENT" || -z "$OVERRIDE_VALUE" ]]; then
+    echo "Specify COMPONENT and OVERRIDE_VALUE to be patched to an existing CSV deployed"
     return 1
+  fi
+
+  if [[ "$COMPONENT" == "operator" ]]; then
+    oc patch csv/"$CSV" -n openshift-netobserv-operator --type=json -p="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/image\", \"value\": \"$OVERRIDE_VALUE\"}]"
+    return
   fi
 
   if [[ "$COMPONENT" == "ebpf" ]]; then
     echo "====> Patching eBPF image"
-    PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/0/value\", \"value\": \"$IMAGE\"}]"
+    OVERRIDE_VAR="RELATED_IMAGE_EBPF_AGENT"
   elif [[ "$COMPONENT" == "flp" ]]; then
     echo "====> Patching FLP image"
-    PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/1/value\", \"value\": \"$IMAGE\"}]"
+    OVERRIDE_VAR="RELATED_IMAGE_FLOWLOGS_PIPELINE"
   elif [[ "$COMPONENT" == "plugin" ]]; then
     echo "====> Patching Plugin image"
-    PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/2/value\", \"value\": \"$IMAGE\"}]"
-  elif [[ "$COMPONENT" == "operator" ]]; then
-    PATCH="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/image\", \"value\": \"$IMAGE\"}]"
+    OVERRIDE_VAR="RELATED_IMAGE_CONSOLE_PLUGIN"
+  elif [[ "$COMPONENT" == "metrics" ]]; then
+    echo "====> Patching DOWNSTREAM_DEPLOYMENT for metrics"
+    OVERRIDE_VAR="DOWNSTREAM_DEPLOYMENT"
   else
-    echo "Use component ebpf, flp, plugin, operator as component to patch or to have metrics populated for upstream installation to cluster prometheus"
+    echo "Use component ebpf, flp, plugin, operator, metrics as component to patch or to have metrics populated for upstream installation to cluster prometheus"
     return 1
   fi
 
-  oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p="$PATCH"
+  ENV_INDEX=$(oc get csv/$CSV -n openshift-netobserv-operator -o json | jq --arg override_var "$OVERRIDE_VAR" '.spec.install.spec.deployments[0].spec.template.spec.containers[0].env | map(.name) | index($override_var)')
+  oc patch csv/$CSV -n openshift-netobserv-operator --type=json -p="[{\"op\": \"replace\", \"path\": \"/spec/install/spec/deployments/0/spec/template/spec/containers/0/env/${ENV_INDEX}/value\", \"value\": \"$OVERRIDE_VALUE\"}]"
 
   if [[ $? != 0 ]]; then
-    echo "failed to patch $COMPONENT with $IMAGE"
+    echo "failed to patch $COMPONENT with $OVERRIDE_VALUE"
     return 1
   fi
 }
