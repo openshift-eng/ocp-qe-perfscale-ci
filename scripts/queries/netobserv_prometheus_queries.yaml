@@ -11,11 +11,11 @@
   metricName: nFlowsProcessedPerMinuteTotals
 
 # total flows processed from workload namespaces
-- query: sum(netobserv_namespace_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"})
+- query: sum(netobserv_namespace_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"}) OR sum(netobserv_workload_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"})
   metricName: nWorkloadFlowsProcessedTotals
 
 # total flows processed from workload namespaces per minute
-- query: sum(rate(netobserv_namespace_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"}[1m])*60)
+- query: sum(rate(netobserv_namespace_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"}[1m])*60) OR sum(rate(netobserv_workload_flows_total{SrcK8S_Namespace=~"node-density-heavy.*|ingress-perf|cluster-density.*"}[1m])*60)
   metricName: nWorkloadFlowsProcessedPerMinuteTotals
 
 # total bytes processed from workload namespaces by netobserv
