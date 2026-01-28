@@ -15,6 +15,7 @@ objects:
         ebpf:
           sampling: ${{EBPFSamplingRate}}
           cacheMaxFlows: ${{EBPFCacheMaxFlows}}
+          cacheActiveTimeout: ${{EBPFCacheActiveTimeout}}
           privileged: "${{EBPFPrivileged}}"
           resources:
             limits:
@@ -62,6 +63,8 @@ parameters:
     value: "true"
   - name: EBPFCacheMaxFlows
     value: "100000"
+  - name: EBPFCacheActiveTimeout
+    value: "5s"
   - name: FLPMemoryLimit
     value: "800Mi"
   - name: KafkaConsumerReplicas
