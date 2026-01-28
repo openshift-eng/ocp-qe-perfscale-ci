@@ -1,5 +1,5 @@
 tests:
-  - name: netobserv-perf-node-density-heavy-AWS-{{ workers }}w
+  - name: netobserv-perf-cluster-density-v2-AWS-{{ workers }}w
     metadata:
       benchmark.keyword: cluster-density-v2
       platform: AWS

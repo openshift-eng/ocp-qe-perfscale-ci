@@ -6,3 +6,9 @@ ack:
   - uuid:  58a57780-480e-481f-b31d-582fdcc853fc
     metric: NetObservClusterMemPercentUtil_avg
     reason: NETOBSERV-2439
+  - uuid: dd28a89d-9335-4f7e-9d05-6b066b3a558c
+    metric: rssOperatorTotals_avg
+    reason: NETOBSERV-2531
+  - uuid: dc022783-49b2-42a0-8d21-e24f281b343d
+    metric: NetObservClusterMemPercentUtil_avg
+    reason: CD-v2 https://redhat-internal.slack.com/archives/C02939DP5L5/p1769410391939729
