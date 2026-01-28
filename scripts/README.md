@@ -53,7 +53,7 @@ There are four sources from which you can install the operator which are detaile
 The latest officially-released version of the downstream operator. It is hosted on the [Red Hat Catalog](https://catalog.redhat.com/software/containers/network-observability/network-observability-operator-bundle) and is the productized version of the operator available to Red Hat customers.
 
 #### Internal
-Continuous internal bundles are created via the CPaaS system and hosted internally on [Brew](https://brewweb.engineering.redhat.com/brew/search?terms=network-observability.*&type=build&match=regexp) - these internal bundles can be added to an index image such as the `aosqe-index` image built by the [index-build](https://mastern-jenkins-csb-openshift-qe.apps.ocp-c1.prod.psi.redhat.com/job/index-build/) Jenkins jobs or used directly via hardcoding the IIB identifier in a CatalogSource as the image source (this is the value of the `$DOWNSTREAM_IMAGE` env variable mentioned in the 'Prerequisites' section).
+Continuous internal bundles are created via the Konflux build system
 
 #### OperatorHub
 The latest officially-released version of the upstream operator. It is hosted on [OperatorHub](https://operatorhub.io/operator/netobserv-operator) and is the community version of the operator available to all.
@@ -95,15 +95,8 @@ To install Dittybopper, follow the steps below:
 2. From `performance-dashboards/dittybopper`, run `$ ./deploy.sh -i $WORKSPACE/ocp-qe-perfscale-ci/scripts/queries/netobserv_dittybopper.json`
 3. If the data isn't visible, you can manually import it by going to the Grafana URL (can be obtained with `$ oc get routes -n dittybopper`), logging in as `admin`, and uploading the relevant dittybopper config file in the `Dashboards` view.
 
-## Testing with Scale CI
-You can use the OCP QE PerfScale team's [scale-ci Jenkins jobs](https://mastern-jenkins-csb-openshift-qe.apps.ocp-c1.prod.psi.redhat.com/job/scale-ci/job/e2e-benchmarking-multibranch-pipeline/) to run performance and scale tests against NO-enabled clusters
-
-### Running Scale CI tests via Jenkins
-Navigate to the Jenkins job page and click on `Build with Parameters`. You may want to include the following `ENV_VARS` prior to building:
-```
-ERROR_ON_VERIFY=false
-MAX_WAIT_TIMEOUT=10m
-```
+## Testing with PerfScale CI
+While node-density-heavy and cluster-density-v2 workload scenarios are run nightly and weekly respectively, to debug in a live cluster, pull request can be created against [openshift/release](https://github.com/openshift/release) repo to run rehearsals for the PerfScale tests, [example PR](https://github.com/openshift/release/pull/73503)
 
 ## Network Observability Prometheus and Elasticsearch tool (NOPE)
 The Network Observability Prometheus and Elasticsearch tool, or NOPE, is a Python program that is used for collecting and sharing performance data for a given OpenShift cluster running the Network Observability Operator, using Prometheus range queries for collection and Elasticsearch servers for storage. It also has run modes for uploading local JSON files to Elasticsearch as well as setting and fetching baselines for given workloads.
@@ -124,8 +117,6 @@ To see all command line options available for the NOPE tool, you can run it with
 ### Standard Mode
 Prometheus queries are sourced from the `netobserv_prometheus_queries.yaml` file within the `scripts/queries/` directory by default - check out that file to see what data the NOPE tool is collecting. Note this can be overriden with the `--yaml-file` flag to run other queries from within other files.
 
-Gathered data can be tied to specific UUIDs and/or Jenkins jobs using specific flags - see the below section for more information. You can also tie a run to a Jira ticket if applicable using the `--jira` flag. 
-
 A raw JSON file will be written to the `data/` directory in the project - note this directory will be created automatically if it does not already exist. You can also explictily disable Elasticsearch uploading with the `--dump-only` flag.
 
 ### Upload Mode
@@ -134,33 +125,8 @@ Data that has been dumped to a JSON file, either due to an issue with Elasticsea
 ### Baseline Mode
 The NOPE tool can also be used for fetching and uploading baselines on a workload-by-workload basis by running it in Baseline mode. Fetching is based on workloads and ISO timestamps - for a given workload, the NOPE tool will fetch the latest baseline present on the specified Elasticsearch server and dump the UUID of that baseline to a `baseline.json` file in the `data/` directory. Uploading is based on UUID - the NOPE tool will gather data about the test run on the specified UUID and create a new baseline document in Elasticsearch. Note you do not need to be connected to an OpenShift cluster if you are running in Baseline mode.
 
-## Fetching metrics using Touchstone 
-NetObserv metrics uploaded to Elasticsearch can be fetched using `touchstone` tool provided by [benchmark-comparison](https://github.com/cloud-bulldozer/benchmark-comparison). Once you have Touchstone set up, you can run it with any given UUID using the `netobserv_touchstone_statistics_config.json` file in the `queries/` directory under `scripts/`
-
-## Different touchstone configs in this branch:
-- [netobserv_touchstone_statistics_config.json](./queries/netobserv_touchstone_statistics_config.json) - collect *all* metrics including per pod, typically used for producing raw datasheets.
-- [netobserv_touchstone_tolerancy_config.json](./queries/netobserv_touchstone_tolerancy_config.json) - collects only *totals* of each metric, typically used for comparison datasheet.
-- [netobserv_touchstone_tolerancy_rules.yaml](./queries/netobserv_touchstone_tolerancy_rules.yaml) - defines tolerance thresholds for metrics that have been identified to determine Pass/Fail criteria depending upon comparison with the baseline
-
-### Baseline comparison with touchstone
-`touchstone_compare` can be used to compare metrics between multiple runs via UUID using the `netobserv_touchstone_tolerancy_config.json` and  `netobserv_touchstone_tolerancy_rules.yaml` files in the `queries/` directory under `scripts/`. For example, to compare between 1.2 and 1.3 node-density-heavy benchmark metrics, you can run something like:
-```bash
-touchstone_compare -url $ES_URL -u d9be1710-abdb-420d-86da-883da583aa03 363eb0de-9213-4d9c-a347-849007003742 --config netobserv_touchstone_tolerancy_config.json --tolerancy-rules netobserv_touchstone_tolerancy_rules.yaml 2> /dev/null | egrep -iB 3 -A 1 "Pass|fail"
-```
-
-To capture the comparison output in JSON file, you can run something like:
-```bash
-touchstone_compare -url $ES_URL -u d9be1710-abdb-420d-86da-883da583aa03 363eb0de-9213-4d9c-a347-849007003742 --config netobserv_touchstone_tolerancy_config.json --tolerancy-rules netobserv_touchstone_tolerancy_rules.yaml -o json --output-file /tmp/tcompare.json
-```
-where workloads UUIDs are:
-- `d9be1710-abdb-420d-86da-883da583aa03` for 1.2 node-density-heavy
-- `363eb0de-9213-4d9c-a347-849007003742` for 1.3 node-density-heavy
-
-## Performance comparison sheets update
-[noo_perfsheets_update.py](scripts/sheets/noo_perfsheets_update.py) is a tool to update the performance comparison sheets that are generated during the network observability performance testings runs which makes use of upstream tool [csv_gen.py](https://github.com/cloud-bulldozer/e2e-benchmarking/blob/master/utils/csv_gen.py). It  replaces the UUIDs with identifiable information and removes redundant rows from the initial generated sheet. To update the correct sheet it relies on [log line](https://github.com/cloud-bulldozer/e2e-benchmarking/blob/master/utils/csv_gen.py#L47) to fetch the sheet name in the Jenkins pipeline.
-
 ## Change point detection and comparison with Orion:
-[Orion](https://github.com/cloud-bulldozer/orion/?tab=readme-ov-file#orion---cli-tool-to-find-regressions) is a tool aimed to detect the change point in the performance metrics across several past runs and aimed to replace touchstone
+[Orion](https://github.com/cloud-bulldozer/orion/?tab=readme-ov-file#orion---cli-tool-to-find-regressions) is a tool aimed to detect the change point in the performance metrics across several past runs.
 
 To detech regressions and change point use `--hunter-analyze` algorithm and to compare 2 uuids, use `--cmr` algorithm, below are the example commands of both runs:
 
@@ -168,7 +134,7 @@ To detech regressions and change point use `--hunter-analyze` algorithm and to c
 
 ```bash
 export workers=25
-export es_metadata_index=ospst-perf_scale_ci*
+export es_metadata_index=ospst-perf-scale-ci*
 export es_benchmark_index=ospst-prod-netobserv-datapoints*
 export version=4.20.0
 export ES_SERVER=https://$ES_USERNAME:$ES_PASSWORD@opensearch.app.intlab.redhat.com
