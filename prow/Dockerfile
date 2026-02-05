@@ -8,7 +8,12 @@ RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/o
     mv kubectl /bin
 
 RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync procps-ng git gcc && \
-    python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv jq
+    python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv jq gsutil
+
+# Allow gsutil to write its state under random UID (OpenShift-safe)
+RUN mkdir -p /.gsutil && \
+    chgrp -R 0 /.gsutil && \
+    chmod -R g+rwX /.gsutil
 
 # Remove capabilities from ping - resolve any symlinks to find actual binary
 RUN PING_BIN=$(readlink -f /usr/bin/ping 2>/dev/null || echo /usr/bin/ping) && \
