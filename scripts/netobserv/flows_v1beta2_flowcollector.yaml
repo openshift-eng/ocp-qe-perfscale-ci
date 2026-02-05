@@ -62,9 +62,9 @@ parameters:
   - name: EBPFPrivileged
     value: "true"
   - name: EBPFCacheMaxFlows
-    value: "100000"
+    value: "120000"
   - name: EBPFCacheActiveTimeout
-    value: "5s"
+    value: "15s"
   - name: FLPMemoryLimit
     value: "800Mi"
   - name: KafkaConsumerReplicas
