@@ -15,6 +15,11 @@ RUN mkdir -p /.gsutil && \
     chgrp -R 0 /.gsutil && \
     chmod -R g+rwX /.gsutil
 
+# yq installation
+RUN curl -sSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    -o /usr/bin/yq && \
+    chmod +x /usr/bin/yq
+
 # Remove capabilities from ping - resolve any symlinks to find actual binary
 RUN PING_BIN=$(readlink -f /usr/bin/ping 2>/dev/null || echo /usr/bin/ping) && \
     if [ -f "$PING_BIN" ] && [ ! -L "$PING_BIN" ]; then \
