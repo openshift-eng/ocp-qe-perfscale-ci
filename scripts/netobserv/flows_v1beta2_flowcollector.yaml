@@ -14,20 +14,11 @@ objects:
         type: eBPF
         ebpf:
           sampling: ${{EBPFSamplingRate}}
-          cacheMaxFlows: ${{EBPFCacheMaxFlows}}
-          cacheActiveTimeout: ${{EBPFCacheActiveTimeout}}
           privileged: "${{EBPFPrivileged}}"
           resources:
             limits:
               memory: ${EBPFMemoryLimit}
-          features:
-          - PacketDrop
-          - DNSTracking
-          - FlowRTT
-          - NetworkEvents
-          - PacketTranslation
-          - UDNMapping
-          - IPSec
+          features: "${{EBPFeatures}}"
           flowFilter:
             action: Accept
             cidr: 0.0.0.0/0
@@ -61,10 +52,8 @@ parameters:
     value: "800Mi"
   - name: EBPFPrivileged
     value: "true"
-  - name: EBPFCacheMaxFlows
-    value: "120000"
-  - name: EBPFCacheActiveTimeout
-    value: "15s"
+  - name: EBPFeatures
+    value: '["PacketDrop","DNSTracking","FlowRTT","NetworkEvents","PacketTranslation","UDNMapping","IPSec"]'
   - name: FLPMemoryLimit
     value: "800Mi"
   - name: KafkaConsumerReplicas

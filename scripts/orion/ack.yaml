@@ -12,3 +12,6 @@ ack:
   - uuid: dc022783-49b2-42a0-8d21-e24f281b343d
     metric: NetObservClusterMemPercentUtil_avg
     reason: CD-v2 https://redhat-internal.slack.com/archives/C02939DP5L5/p1769410391939729
+  - uuid: 3adea5e5-e3e3-403b-979a-be7a8dd7a0b7
+    metric: rssFLPTotals_avg
+    reason: Bug NETOBSERV-2597 for NDH
