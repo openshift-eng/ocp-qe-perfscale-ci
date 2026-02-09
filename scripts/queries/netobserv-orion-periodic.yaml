@@ -1,11 +1,13 @@
 tests:
-  - name: netobserv-perf-cluster-density-v2-AWS-{{ workers }}w
+  - name: netobserv-perf-{{ workload }}-AWS-{{ workers }}w
     metadata:
-      benchmark.keyword: cluster-density-v2
+      benchmark.keyword: {{ workload }}
       platform: AWS
       workerNodesCount: {{ workers }}
       ocpVersion: "{{ version }}"
       jobType: periodic
+      not:
+        buildUrl: "*service-without-loki*"
     metrics:
       - name: nFlowsProcessedTotals
         metric_name: nFlowsProcessedTotals
