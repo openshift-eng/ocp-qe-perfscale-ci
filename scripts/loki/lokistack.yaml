@@ -19,6 +19,127 @@ objects:
             perStreamRateLimitBurst: 45
       tenants:
         mode: openshift-network
+      template:
+        compactor:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        distributor:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        ingester:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        querier:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        queryFrontend:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        gateway:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        indexGateway:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
+        ruler:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              value: reserved
+              effect: NoExecute
       managementState: Managed
       storage:
         schemas:
