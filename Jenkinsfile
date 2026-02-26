@@ -130,7 +130,7 @@ pipeline {
               set -x
 
               SECONDS=0
-              curl -o openshift-qe-workers-infra-workload-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/workers-infra-workload/openshift-qe-workers-infra-workload-commands.sh
+              curl -o openshift-qe-workers-infra-workload-commands.sh https://raw.githubusercontent.com/openshift/release/main/ci-operator/step-registry/openshift-qe/workers-infra-workload/openshift-qe-workers-infra-workload-commands.sh
               #Compatible with openshift/release
               export KUBECONFIG=~/.kube/config
               export SHARED_DIR=${SHARED_DIR:/tmp/}
@@ -190,7 +190,7 @@ pipeline {
               env
               set -x
               SECONDS=0
-              curl -o openshift-qe-move-pods-infra-commands.sh https://raw.githubusercontent.com/openshift/release/refs/heads/master/ci-operator/step-registry/openshift-qe/move-pods-infra/openshift-qe-move-pods-infra-commands.sh
+              curl -o openshift-qe-move-pods-infra-commands.sh https://raw.githubusercontent.com/openshift/release/main/ci-operator/step-registry/openshift-qe/move-pods-infra/openshift-qe-move-pods-infra-commands.sh
               #Compatible with openshift/release
               export KUBECONFIG=~/.kube/config
               export SHARED_DIR=${SHARED_DIR:/tmp/}
