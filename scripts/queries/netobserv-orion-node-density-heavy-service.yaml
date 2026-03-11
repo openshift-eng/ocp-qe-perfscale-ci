@@ -6,8 +6,8 @@ tests:
       platform: AWS
       workerNodesCount: {{ workers }}
       ocpVersion: "{{ version }}"
-      jobType: periodic
-      deploymentModel: Service
+      jobType: "{{ jobtype }}"
+      deployment_model: "{{ deployment_model }}"
     metrics:
       - name: nFlowsProcessedTotals
         metric_name: nFlowsProcessedTotals
@@ -127,12 +127,30 @@ tests:
           agg_type: avg
         direction: 1
         threshold: 10
+      - name: workingsetFLPTotals
+        metric_name: workingsetFLPTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: flp_ws
+          agg_type: avg
+        direction: 1
+        threshold: 10
       - name: rssEBPFTotals
         metric_name: rssEBPFTotals
         timestamp: iso_timestamp
         metric_of_interest: value
         agg:
           value: ebpf_rss
+          agg_type: avg
+        direction: 1
+        threshold: 10
+      - name: workingsetEBPFTotals
+        metric_name: workingsetEBPFTotals
+        timestamp: iso_timestamp
+        metric_of_interest: value
+        agg:
+          value: ebpf_ws
           agg_type: avg
         direction: 1
         threshold: 10
