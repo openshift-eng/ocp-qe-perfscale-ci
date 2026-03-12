@@ -6,7 +6,7 @@ tests:
       platform: AWS
       workerNodesCount: {{ workers }}
       ocpVersion: "{{ version }}"
-      jobType: "{{ job_type }}"
+      jobType: "{{ jobtype }}"
       deployment_model: "{{ deployment_model }}"
     metrics:
       - name: nFlowsProcessedTotals
