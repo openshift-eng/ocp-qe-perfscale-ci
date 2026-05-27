@@ -43,4 +43,5 @@ RUN REPO_URL="https://github.com/cloud-bulldozer/orion" \
     LATEST_TAG=$(curl --fail --retry 8 --retry-all-errors -sS "$REPO_LATEST_URL" | jq -r .name) && \
     git clone "$REPO_URL" --branch "$LATEST_TAG" --depth 1 /orion && \
     pip install -r requirements.txt && \
-    pip install -e .
+    pip install -e . && \
+    chmod -R 777 /e2e-benchmarking /orion
