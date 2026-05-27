@@ -8,7 +8,7 @@ RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/o
     mv kubectl /bin
 
 RUN dnf update -y && dnf install -y gettext util-linux jq openssh-clients sshpass iputils nmap-ncat rsync procps-ng git gcc && \
-    python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv jq gsutil
+    python3.11 -m pip install --upgrade pip && python3.11 -m pip install virtualenv gsutil
 
 # Allow gsutil to write its state under random UID (OpenShift-safe)
 RUN mkdir -p /.gsutil && \
@@ -30,3 +30,17 @@ RUN curl -sSL $(curl -sSL https://api.github.com/repos/openshift/rosa/releases/l
     mv rosa /bin && chmod 777 /bin/rosa
 
 RUN curl -sSL $(curl -sSL https://api.github.com/repos/openshift-online/ocm-cli/releases/latest | jq -r ".assets[] | select(.name == \"ocm-linux-amd64\") | .browser_download_url") --output /bin/ocm && chmod 777 /bin/ocm
+
+# Clone e2e-benchmarking at build time (fresh on every build, latest tag)
+RUN REPO_URL="https://github.com/cloud-bulldozer/e2e-benchmarking" \
+    REPO_LATEST_URL="https://api.github.com/repos/cloud-bulldozer/e2e-benchmarking/releases/latest" \
+    LATEST_TAG=$(curl --fail --retry 8 --retry-all-errors -sS "$REPO_LATEST_URL" | jq -r .name) && \
+    git clone "$REPO_URL" --branch "$LATEST_TAG" --depth 1 /e2e-benchmarking
+
+# Clone and install orion at build time
+RUN REPO_URL="https://github.com/cloud-bulldozer/orion" \
+    REPO_LATEST_URL="https://api.github.com/repos/cloud-bulldozer/orion/releases/latest" \
+    LATEST_TAG=$(curl --fail --retry 8 --retry-all-errors -sS "$REPO_LATEST_URL" | jq -r .name) && \
+    git clone "$REPO_URL" --branch "$LATEST_TAG" --depth 1 /orion && \
+    pip install -r requirements.txt && \
+    pip install -e .
