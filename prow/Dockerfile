@@ -30,3 +30,14 @@ RUN curl -sSL $(curl -sSL https://api.github.com/repos/openshift/rosa/releases/l
     mv rosa /bin && chmod 777 /bin/rosa
 
 RUN curl -sSL $(curl -sSL https://api.github.com/repos/openshift-online/ocm-cli/releases/latest | jq -r ".assets[] | select(.name == \"ocm-linux-amd64\") | .browser_download_url") --output /bin/ocm && chmod 777 /bin/ocm
+
+RUN curl --retry 5 --retry-delay 10 -sSL $(curl --retry 5 --retry-delay 10 -sSL https://api.github.com/repos/kube-burner/kube-burner/releases/latest | jq -r ".assets[] | select(.name | test(\"linux-x86_64.tar.gz\")) | .browser_download_url") | tar xvzf - -C /usr/bin/ kube-burner && \
+    chmod +x /usr/bin/kube-burner
+
+RUN curl --retry 5 --retry-delay 10 -sSL $(curl --retry 5 --retry-delay 10 -sSL https://api.github.com/repos/kube-burner/kube-burner-ocp/releases/latest | jq -r ".assets[] | select(.name | test(\"linux-x86_64.tar.gz\")) | .browser_download_url") | tar xvzf - -C /usr/bin/ kube-burner-ocp && \
+    chmod +x /usr/bin/kube-burner-ocp
+
+RUN curl --retry 5 --retry-delay 10 -sSL $(curl --retry 5 --retry-delay 10 -sSL https://api.github.com/repos/cloud-bulldozer/go-commons/releases/latest | jq -r ".assets[] | select(.name == \"ocp-metadata-linux-amd64\") | .browser_download_url") -o /usr/bin/ocp-metadata && \
+    chmod +x /usr/bin/ocp-metadata
+
+RUN python3.11 -m pip install --retries 5 --timeout 60 git+https://github.com/cloud-bulldozer/orion.git@v1.1.4
