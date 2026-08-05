@@ -2,6 +2,8 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 
 LABEL vendor="Red Hat Inc." maintainer="OCP QE Team"
 
+COPY --from=docker.io/mikefarah/yq /usr/bin/yq /bin/yq
+
 RUN dnf install -y python3.11 python3.11-pip && ln -s /usr/bin/python3.11 /usr/bin/python && ln -s /usr/bin/pip3.11 /usr/bin/pip
 
 RUN curl -sSL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux-amd64-rhel8.tar.gz | tar -xvzf -  &&\
