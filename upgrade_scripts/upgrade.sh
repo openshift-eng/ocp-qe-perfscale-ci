@@ -74,13 +74,10 @@ fi
 
 if [[ "X$node_arch" == "Xarm64" ]];then
    arch_prefix=aarch64
-   release_path=ocp-arm64/release-arm64
 elif [[ "X$node_arch" == "Xmulti" ]];then
    arch_prefix=multi
-   release_path=ocp/release
 else
    arch_prefix=x86_64
-   release_path=ocp/release
 fi
 
 
@@ -119,10 +116,13 @@ do
       elif [[ "X$node_arch" == "Xmulti" ]]; then
            upgrade_line="oc adm upgrade --to-image quay.io/openshift-release-dev/ocp-release-nightly@${target_sha} --force --allow-explicit-upgrade"
       else
+        #Use the by-digest pullspec from the release graph, the payload repo differs per
+        #major/arch (ocp/release, ocp/release-5, ocp-arm64/release-arm64 ...) so it can not
+        #be reconstructed from the version string
         if [ "X$enable_force" == "Xtrue" ];then
-           upgrade_line="oc adm upgrade --to-image registry.ci.openshift.org/$release_path:$target_version_prefix --force --allow-explicit-upgrade"
+           upgrade_line="oc adm upgrade --to-image $target_sha --force --allow-explicit-upgrade"
         else
-           upgrade_line="oc adm upgrade --to-image registry.ci.openshift.org/$release_path:$target_version_prefix --allow-explicit-upgrade"
+           upgrade_line="oc adm upgrade --to-image $target_sha --allow-explicit-upgrade"
         fi
       fi
   else
@@ -159,7 +159,8 @@ do
   export UPGRADE_WAIT_NUM=${UPGRADE_WAIT_NUM:-300}
   export PYTHONUNBUFFERED=1
   echo "Specify UPGRADE_WAIT_NUM is $UPGRADE_WAIT_NUM"
-  python3 -c "import check_upgrade; check_upgrade.check_upgrade('$target_version_prefix',wait_num=$UPGRADE_WAIT_NUM)"
+  upgrade_completed=true
+  python3 -c "import check_upgrade; check_upgrade.check_upgrade('$target_version_prefix',wait_num=$UPGRADE_WAIT_NUM)" || upgrade_completed=false
   duration=$SECONDS
   echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
   sleep 30

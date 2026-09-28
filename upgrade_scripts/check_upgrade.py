@@ -145,21 +145,54 @@ def check_cluster_version():
         print("Error getting clusterversion")
     return ""
 
+def get_release_accepted():
+    # Returns the ReleaseAccepted condition of the clusterversion as (status, message).
+    # The CVO sets it to False when it cannot retrieve/verify the requested payload,
+    # for example when --to-image points at a tag that does not exist.
+    return_code, output = invoke("oc get clusterversion -o json")
+    if return_code != 0:
+        return "", ""
+    try:
+        cv_json = json.loads(output)
+        for condition in cv_json['items'][0]['status']['conditions']:
+            if condition['type'] == "ReleaseAccepted":
+                return condition['status'], condition.get('message', '')
+    except (ValueError, KeyError, IndexError) as exc:
+        print(f"Could not read the ReleaseAccepted condition: {exc}")
+    return "", ""
+
 # Main function
-def check_upgrade(expected_cluster_version, wait_num=300):
+def check_upgrade(expected_cluster_version, wait_num=300, rejected_wait_num=20):
     print(f"Starting upgrade check to {expected_cluster_version}")
     upgrade_version = check_cluster_version()
     j = 0
+    rejected = 0
     # Will wait for up to 2.5 hours... might need to increase or decrease - need to observe.
     while j < wait_num:
         if upgrade_version == expected_cluster_version:
             wait_for_nodes_ready()
             wait_for_co_ready()
             return 0
+        # Bail out early instead of polling for hours when the CVO refuses the payload
+        accepted_status, accepted_message = get_release_accepted()
+        if accepted_status == "False":
+            rejected += 1
+            print(f"ReleaseAccepted is False ({rejected}/{rejected_wait_num}): {accepted_message}")
+            if rejected >= rejected_wait_num:
+                print("#"*118)
+                print(f"ERROR, the CVO did not accept the requested payload: {accepted_message}")
+                print("The upgrade never started, check the --to-image pullspec passed to 'oc adm upgrade'")
+                print("#"*118)
+                sys.exit(1)
+        else:
+            rejected = 0
         upgrade_version = check_cluster_version()
         time.sleep(30)
         j += 1
-    return 1
+    print("#"*118)
+    print(f"ERROR, the cluster is still on {upgrade_version} and did not reach {expected_cluster_version} in time")
+    print("#"*118)
+    sys.exit(1)
 
 def wait_for_co_ready(wait_num=30):
 
