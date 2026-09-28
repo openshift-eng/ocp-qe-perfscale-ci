@@ -40,7 +40,7 @@ kas_rollingout_wait(){
 
 function abnormal_co() {
   echo -e "exit from upgrade loop\n"
-  echo -e "**************Post Action after upgrade succ****************\n"
+  echo -e "**************Post Action after upgrade****************\n"
 
   post_check1=`oc get node -o wide`
   post_check2=`oc get co`
@@ -62,7 +62,7 @@ function abnormal_co() {
   echo -e "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Abnormal co details~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
   abnormalCO=""
   abnormalCO=$(oc get co -o jsonpath='{range .items[*]}{.metadata.name} {range .status.conditions[*]} {.type}={.status}{end}{"\n"}{end}' | grep -v "openshift-samples" | grep -w -E 'Available=False|Progressing=True|Degraded=True' | awk '{print $1}')
-  if [ "X$abnormaalCO" != "X" ]; then
+  if [ "X$abnormalCO" != "X" ]; then
       upgrade_pass=False
       quick_diagnosis "$abnormalCO"
       for aco in $abnormalCO; do
@@ -75,6 +75,12 @@ function abnormal_co() {
   ret3=`oc get co |sed '1d'|grep -v "openshift-samples"|grep -v "service-catalog-apiserver"|grep -v "service-catalog-controller-manager"|grep -v ${target_version_prefix}|awk '{print $1}'|while read line; do oc describe co $line;done`
   echo -e "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
 
+
+  # The upgrade itself never finished, do not report this as a post-check failure
+  if [ "X$upgrade_completed" == "Xfalse" ]; then
+      echo -e "The cluster never reached ${target_version_prefix}, see the upgrade check output above.\n"
+      exit 1 # upgrade itself fail
+  fi
 
   if [ -z "$ret1" ] && [ -z "$ret2" ] && [ -z "$ret3" ]; then
       echo -e "post check passed without err.\n"
